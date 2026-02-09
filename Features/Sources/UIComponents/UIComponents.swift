@@ -1,39 +1,36 @@
 import SwiftUI
 import AudioEngineClient
 
-// Reusable UI components go here
-
-
-/// A drum pad button that plays a sound when tapped
 public struct DrumPadButton: View {
     let pad: AudioEngineClient.DrumPad
     let samples: [Int: AudioEngineClient.Sample]
     let onTap: (Int) -> Void
 
-    public init(pad: AudioEngineClient.DrumPad, samples: [Int: AudioEngineClient.Sample], onTap: @escaping (Int) -> Void) {
+    public init(
+        pad: AudioEngineClient.DrumPad,
+        samples: [Int: AudioEngineClient.Sample],
+        onTap: @escaping (Int) -> Void
+    ) {
         self.pad = pad
         self.samples = samples
         self.onTap = onTap
     }
     
     public var body: some View {
-        Button(action: {
+        Button {
             onTap(pad.id)
-        }) {
-            ZStack {
-                Circle()
-                    .fill(Color(hex: pad.color) ?? .gray)
-                    .opacity(0.8)
-                    .shadow(radius: 5)
-                
-                if let sample = samples[pad.sampleId] {
-                    Text(sample.name.prefix(2).uppercased())
-                        .foregroundColor(.white)
-                        .fontWeight(.bold)
-                        .minimumScaleFactor(0.5)
-                        .lineLimit(1)
+        } label: {
+            RoundedRectangle(cornerRadius: 5)
+                .fill(Color(hex: pad.color) ?? .gray)
+                .opacity(0.8)
+                .overlay {
+                    if let sample = samples[pad.sampleId] {
+                        Text(sample.name.prefix(2).uppercased())
+                            .foregroundColor(.white)
+                            .fontWeight(.bold)
+                            .minimumScaleFactor(0.5)
+                    }
                 }
-            }
         }
         .buttonStyle(DrumPadButtonStyle())
     }
@@ -43,7 +40,7 @@ public struct DrumPadButton: View {
 public struct DrumPadButtonStyle: ButtonStyle {
     public func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .frame(width: 70, height: 70)
+            .aspectRatio(1, contentMode: .fill)
             .scaleEffect(configuration.isPressed ? 0.9 : 1.0)
             .animation(.easeInOut(duration: 0.1), value: configuration.isPressed)
     }

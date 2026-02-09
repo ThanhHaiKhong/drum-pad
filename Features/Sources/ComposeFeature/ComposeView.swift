@@ -11,92 +11,82 @@ public struct ComposeView: View {
     }
 
     public var body: some View {
-        WithViewStore(store, observe: { $0 }) { viewStore in
-            VStack(spacing: 20) {
-                // Header with preset selection
+        ScrollView(showsIndicators: false) {
+            VStack {
                 HStack {
                     Text("Drum Pad Composer")
                         .font(.title)
                         .fontWeight(.bold)
-                    
+
                     Spacer()
-                    
-                    // Preset selector
-                    Picker("Preset", selection: viewStore.binding(
-                        get: { $0.selectedPreset.isEmpty ? "Select Preset" : $0.selectedPreset },
-                        send: { .loadPreset($0) }
+
+                    Picker("Preset", selection: Binding(
+                        get: { store.selectedPreset },
+                        set: { preset in store.send(.loadPreset(preset)) }
                     )) {
-                        Text("Select Preset").tag("Select Preset")
+                        Text("Select Preset").tag("")
                         Text("550").tag("550")
                         Text("Custom").tag("custom")
                     }
                     .pickerStyle(MenuPickerStyle())
                 }
-                .padding()
-                
-                // Current preset info
+
                 HStack {
-                    Text("Current Preset: \(viewStore.audioEngineState.currentPreset.isEmpty ? "None" : viewStore.audioEngineState.currentPreset)")
-                        .font(.caption)
+                    Text("Current Preset: \(store.selectedPreset.isEmpty ? "None" : store.selectedPreset)")
+                        .font(.subheadline)
                         .foregroundColor(.secondary)
-                    
+
                     Spacer()
-                    
-                    Text("\(viewStore.audioEngineState.loadedSamplesCount)/\(viewStore.audioEngineState.totalSamplesCount) Samples Loaded")
-                        .font(.caption)
+
+                    Text("\(store.audioEngineState.loadedSamplesCount)/\(store.audioEngineState.totalSamplesCount) Samples Loaded")
+                        .font(.subheadline)
                         .foregroundColor(.secondary)
                 }
-                .padding(.horizontal)
-                
-                // Drum pad grid
+                .padding(.vertical)
+
                 LazyVGrid(
                     columns: Array(repeating: GridItem(.flexible(), spacing: 10), count: 4),
                     spacing: 10
                 ) {
-                    ForEach(viewStore.audioEngineState.pads.sorted(by: { $0.key < $1.key }), id: \.key) { padId, pad in
-                        if viewStore.audioEngineState.samples[pad.sampleId] != nil {
+                    ForEach(store.audioEngineState.pads.sorted(by: { $0.key < $1.key }), id: \.key) { padId, pad in
+                        if store.audioEngineState.samples[pad.sampleId] != nil {
                             DrumPadButton(
                                 pad: pad,
-                                samples: viewStore.audioEngineState.samples
+                                samples: store.audioEngineState.samples
                             ) { padId in
-                                viewStore.send(.playPad(padId))
+                                store.send(.playPad(padId))
                             }
-                            .frame(height: 80)
-                        } else {
-                            // Empty pad if no sample assigned
-                            RoundedRectangle(cornerRadius: 10)
-                                .fill(Color.gray.opacity(0.3))
-                                .overlay(
-                                    Text("Empty")
-                                        .font(.caption)
-                                        .foregroundColor(.gray)
-                                )
-                                .frame(height: 80)
                         }
                     }
                 }
-                .padding()
-                
-                // Controls
+
                 HStack {
-                    Button("Stop All") {
-                        viewStore.send(.stopAll)
+                    Button {
+                        store.send(.stopAll)
+                    } label: {
+                        Text("Stop All")
+                            .font(.headline)
                     }
                     .buttonStyle(.bordered)
-                    
+
                     Spacer()
-                    
-                    Button("Load Preset") {
-                        if !viewStore.selectedPreset.isEmpty && viewStore.selectedPreset != "Select Preset" {
-                            viewStore.send(.loadPreset(viewStore.selectedPreset))
+
+                    Button {
+                        if !store.selectedPreset.isEmpty && store.selectedPreset != "" {
+                            store.send(.loadPreset(store.selectedPreset))
                         }
+                    } label: {
+                        Text("Load Preset")
+                            .font(.headline)
                     }
                     .buttonStyle(.borderedProminent)
                 }
-                .padding()
+                .padding(.vertical)
             }
+            .fontDesign(.monospaced)
+            .padding()
             .onAppear {
-                viewStore.send(.onAppear)
+                store.send(.onAppear)
             }
         }
     }
