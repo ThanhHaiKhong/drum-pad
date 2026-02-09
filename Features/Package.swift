@@ -10,12 +10,18 @@ let package = Package(
         .singleTargetLibrary("AppFeature"),
         .singleTargetLibrary("AppSchemas"),
         .singleTargetLibrary("UIComponents"),
+        .singleTargetLibrary("AudioEngineClient"),
+        .singleTargetLibrary("AudioEngineClientLive"),
     ],
     dependencies: [
         .package(
             url: "https://github.com/pointfreeco/swift-composable-architecture.git",
             branch: "main"
         ),
+        .package(
+            url: "https://github.com/AudioKit/AudioKit.git",
+            branch: "main"
+        )
     ],
     targets: [
         .target(
@@ -23,12 +29,16 @@ let package = Package(
             dependencies: [
                 .product(name: "ComposableArchitecture", package: "swift-composable-architecture"),
                 "AppSchemas",
+                "AudioKit",
+                "AudioEngineClient",
+                "AudioEngineClientLive"
             ]
         ),
         .target(
             name: "AppSchemas",
             dependencies: [
                 .product(name: "ComposableArchitecture", package: "swift-composable-architecture"),
+                "AudioKit"
             ]
         ),
         .target(
@@ -36,6 +46,23 @@ let package = Package(
             dependencies: [
                 .product(name: "ComposableArchitecture", package: "swift-composable-architecture"),
                 "AppSchemas",
+                "AudioEngineClient"
+            ]
+        ),
+        .target(
+            name: "AudioEngineClient",
+            dependencies: [
+                .product(name: "ComposableArchitecture", package: "swift-composable-architecture"),
+                "AppSchemas",
+                "AudioKit"
+            ]
+        ),
+        .target(
+            name: "AudioEngineClientLive",
+            dependencies: [
+                .product(name: "ComposableArchitecture", package: "swift-composable-architecture"),
+                "AudioEngineClient",
+                "AudioKit"
             ]
         ),
     ]

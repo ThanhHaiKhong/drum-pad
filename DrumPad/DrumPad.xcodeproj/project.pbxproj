@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 77;
+	objectVersion = 63;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -12,6 +12,7 @@
 		45F6597B6B4A8402EEAB9CF1 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1262C45ADD9BAD4C8782B803 /* Foundation.framework */; };
 		4B23EED30C207662729C3E25 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1CE82F5BF21F1842D323F38 /* SceneDelegate.swift */; };
 		5935AD5106FD70DCF388565F /* DrumPadApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37DC8CF9FA3EA105B396D0A6 /* DrumPadApp.swift */; };
+		7FC0603A2F39C4C700A8424F /* AppFeature in Frameworks */ = {isa = PBXBuildFile; productRef = 7FC060392F39C4C700A8424F /* AppFeature */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -30,6 +31,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				45F6597B6B4A8402EEAB9CF1 /* Foundation.framework in Frameworks */,
+				7FC0603A2F39C4C700A8424F /* AppFeature in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -106,6 +108,7 @@
 			);
 			name = DrumPad;
 			packageProductDependencies = (
+				7FC060392F39C4C700A8424F /* AppFeature */,
 			);
 			productName = DrumPad;
 			productReference = EAE49770967C1430B2FBD31A /* DrumPad.app */;
@@ -130,7 +133,6 @@
 			);
 			mainGroup = BB1C5BF5386D674E209760FE;
 			minimizedProjectReferenceProxies = 1;
-			preferredProjectObjectVersion = 77;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
@@ -341,6 +343,13 @@
 			defaultConfigurationName = Debug;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		7FC060392F39C4C700A8424F /* AppFeature */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = AppFeature;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = AD84EE1C945B6EF7C95454E8 /* Project object */;
 }
