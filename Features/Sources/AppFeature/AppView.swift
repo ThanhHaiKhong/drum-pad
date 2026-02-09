@@ -1,5 +1,6 @@
 import SwiftUI
 import ComposableArchitecture
+import ComposeFeature
 
 public struct AppView: View {
     let store: StoreOf<AppStore>
@@ -9,11 +10,14 @@ public struct AppView: View {
     }
 
     public var body: some View {
-        Text("Hello, TCA!")
-            .fontDesign(.monospaced)
+        NavigationStack {
+            ComposeView(
+                store: store.scope(state: \.composeState, action: \.compose)
+            )
             .onAppear {
                 store.send(.onAppear)
             }
+        }
     }
 }
 
