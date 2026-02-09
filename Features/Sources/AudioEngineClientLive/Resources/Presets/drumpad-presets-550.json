@@ -1,0 +1,1193 @@
+{
+	"id": "550",
+	"orderBy": "487",
+	"name": "Urban Hip-Hop",
+	"price": 10,
+	"tempo": 90,
+	"audioPreview1Name": "Urban Hip-Hop",
+	"extraDescription": [{}],
+	"files": {
+		"1": {
+			"filename": "01.wav",
+			"color": "purple",
+			"choke": 1
+		},
+		"2": {
+			"filename": "02.wav",
+			"color": "purple",
+			"choke": 1
+		},
+		"3": {
+			"filename": "03.wav",
+			"color": "purple",
+			"choke": 1
+		},
+		"4": {
+			"filename": "04.wav",
+			"color": "yellow",
+			"choke": 2
+		},
+		"5": {
+			"filename": "05.wav",
+			"color": "yellow",
+			"choke": 2
+		},
+		"6": {
+			"filename": "06.wav",
+			"color": "purple",
+			"choke": 1
+		},
+		"7": {
+			"filename": "07.wav",
+			"color": "green",
+			"choke": 3
+		},
+		"8": {
+			"filename": "08.wav",
+			"color": "blue",
+			"choke": 0
+		},
+		"9": {
+			"filename": "09.wav",
+			"color": "green",
+			"choke": 3
+		},
+		"10": {
+			"filename": "10.wav",
+			"color": "red",
+			"choke": 0
+		},
+		"11": {
+			"filename": "11.wav",
+			"color": "yellow",
+			"choke": 0
+		},
+		"12": {
+			"filename": "12.wav",
+			"color": "red",
+			"choke": 0
+		},
+		"13": {
+			"filename": "13.wav",
+			"color": "blue",
+			"choke": 1
+		},
+		"14": {
+			"filename": "14.wav",
+			"color": "blue",
+			"choke": 1
+		},
+		"15": {
+			"filename": "15.wav",
+			"color": "blue",
+			"choke": 1
+		},
+		"16": {
+			"filename": "16.wav",
+			"color": "red",
+			"choke": 2
+		},
+		"17": {
+			"filename": "17.wav",
+			"color": "red",
+			"choke": 2
+		},
+		"18": {
+			"filename": "18.wav",
+			"color": "blue",
+			"choke": 1
+		},
+		"19": {
+			"filename": "19.wav",
+			"color": "yellow",
+			"choke": 3
+		},
+		"20": {
+			"filename": "20.wav",
+			"color": "yellow",
+			"choke": 3
+		},
+		"21": {
+			"filename": "21.wav",
+			"color": "yellow",
+			"choke": 3
+		},
+		"22": {
+			"filename": "22.wav",
+			"color": "purple",
+			"choke": 0
+		},
+		"23": {
+			"filename": "23.wav",
+			"color": "green",
+			"choke": 0
+		},
+		"24": {
+			"filename": "24.wav",
+			"color": "purple",
+			"choke": 0
+		}
+	},
+	"timestamp": 1769692170,
+	"icon": "https://cloudflare-content-dpm.easybrain.com/shared/files/dpm/cover_icons/urban_hiphop.jpg",
+	"imagePreview1": "https://cloudflare-content-dpm.easybrain.com/shared/files/dpm/covers/id/550.jpg",
+	"audioPreview1URL": "https://cloudflare-content-dpm.easybrain.com/shared/files/dpm/audio_previews/urban_hiphop_0_preview.mp3",
+	"author": "BLGN",
+	"tags": ["#new", "#hiphop"],
+	"beatSchool": {
+		"v0": [{
+			"id": 0,
+			"version": 0,
+			"name": "01",
+			"sequencerSize": 17,
+			"pads": {
+				"9": [{
+					"start": 0
+				}, {
+					"start": 8
+				}],
+				"10": [{
+					"start": 2
+				}, {
+					"start": 6
+				}, {
+					"start": 10
+				}, {
+					"start": 14
+				}],
+				"11": [{
+					"start": 4
+				}, {
+					"start": 12
+				}],
+				"undefined": [{
+					"start": 15
+				}]
+			},
+			"orderBy": 0
+		}, {
+			"id": 1,
+			"version": 0,
+			"name": "02",
+			"sequencerSize": 33,
+			"pads": {
+				"9": [{
+					"start": 0
+				}, {
+					"start": 8
+				}, {
+					"start": 16
+				}, {
+					"start": 24
+				}],
+				"10": [{
+					"start": 2
+				}, {
+					"start": 6
+				}, {
+					"start": 10
+				}, {
+					"start": 14
+				}, {
+					"start": 18
+				}, {
+					"start": 22
+				}, {
+					"start": 26
+				}, {
+					"start": 30
+				}],
+				"11": [{
+					"start": 4
+				}, {
+					"start": 12
+				}, {
+					"start": 20
+				}, {
+					"start": 28
+				}],
+				"undefined": [{
+					"start": 31
+				}]
+			},
+			"orderBy": 1
+		}, {
+			"id": 2,
+			"version": 0,
+			"name": "03",
+			"sequencerSize": 33,
+			"pads": {
+				"0": [{
+					"start": 0
+				}],
+				"1": [{
+					"start": 8
+				}],
+				"2": [{
+					"start": 16
+				}],
+				"5": [{
+					"start": 24
+				}],
+				"undefined": [{
+					"start": 31
+				}]
+			},
+			"orderBy": 2
+		}, {
+			"id": 3,
+			"version": 0,
+			"name": "04",
+			"sequencerSize": 33,
+			"pads": {
+				"0": [{
+					"start": 0
+				}],
+				"1": [{
+					"start": 8
+				}],
+				"2": [{
+					"start": 16
+				}],
+				"5": [{
+					"start": 24
+				}],
+				"9": [{
+					"start": 0
+				}, {
+					"start": 8
+				}, {
+					"start": 16
+				}, {
+					"start": 24
+				}],
+				"10": [{
+					"start": 2
+				}, {
+					"start": 6
+				}, {
+					"start": 10
+				}, {
+					"start": 14
+				}, {
+					"start": 18
+				}, {
+					"start": 22
+				}, {
+					"start": 26
+				}, {
+					"start": 30
+				}],
+				"11": [{
+					"start": 4
+				}, {
+					"start": 12
+				}, {
+					"start": 20
+				}, {
+					"start": 28
+				}],
+				"undefined": [{
+					"start": 31
+				}]
+			},
+			"orderBy": 3
+		}, {
+			"id": 4,
+			"version": 0,
+			"name": "05",
+			"sequencerSize": 33,
+			"pads": {
+				"0": [{
+					"start": 0
+				}],
+				"1": [{
+					"start": 8
+				}],
+				"2": [{
+					"start": 16
+				}],
+				"5": [{
+					"start": 24
+				}],
+				"6": [{
+					"start": 0
+				}],
+				"8": [{
+					"start": 16
+				}],
+				"undefined": [{
+					"start": 31
+				}]
+			},
+			"orderBy": 4
+		}, {
+			"id": 5,
+			"version": 0,
+			"name": "06",
+			"sequencerSize": 33,
+			"pads": {
+				"0": [{
+					"start": 0
+				}],
+				"1": [{
+					"start": 8
+				}],
+				"2": [{
+					"start": 16
+				}],
+				"5": [{
+					"start": 24
+				}],
+				"6": [{
+					"start": 0
+				}],
+				"8": [{
+					"start": 16
+				}],
+				"9": [{
+					"start": 0
+				}, {
+					"start": 8
+				}, {
+					"start": 16
+				}, {
+					"start": 24
+				}],
+				"10": [{
+					"start": 2
+				}, {
+					"start": 6
+				}, {
+					"start": 10
+				}, {
+					"start": 14
+				}, {
+					"start": 18
+				}, {
+					"start": 22
+				}, {
+					"start": 26
+				}, {
+					"start": 30
+				}],
+				"11": [{
+					"start": 4
+				}, {
+					"start": 12
+				}, {
+					"start": 20
+				}, {
+					"start": 28
+				}],
+				"undefined": [{
+					"start": 31
+				}]
+			},
+			"orderBy": 5
+		}, {
+			"id": 6,
+			"version": 0,
+			"name": "07",
+			"sequencerSize": 33,
+			"pads": {
+				"0": [{
+					"start": 0
+				}],
+				"1": [{
+					"start": 8
+				}],
+				"2": [{
+					"start": 16
+				}],
+				"3": [{
+					"start": 0
+				}],
+				"4": [{
+					"start": 16
+				}],
+				"5": [{
+					"start": 24
+				}],
+				"undefined": [{
+					"start": 31
+				}]
+			},
+			"orderBy": 6
+		}, {
+			"id": 7,
+			"version": 0,
+			"name": "08",
+			"sequencerSize": 33,
+			"pads": {
+				"0": [{
+					"start": 0
+				}],
+				"1": [{
+					"start": 8
+				}],
+				"2": [{
+					"start": 16
+				}],
+				"3": [{
+					"start": 0
+				}],
+				"4": [{
+					"start": 16
+				}],
+				"5": [{
+					"start": 24
+				}],
+				"9": [{
+					"start": 0
+				}, {
+					"start": 8
+				}, {
+					"start": 16
+				}, {
+					"start": 24
+				}],
+				"10": [{
+					"start": 2
+				}, {
+					"start": 6
+				}, {
+					"start": 10
+				}, {
+					"start": 14
+				}, {
+					"start": 18
+				}, {
+					"start": 22
+				}, {
+					"start": 26
+				}, {
+					"start": 30
+				}],
+				"11": [{
+					"start": 4
+				}, {
+					"start": 12
+				}, {
+					"start": 20
+				}, {
+					"start": 28
+				}],
+				"undefined": [{
+					"start": 31
+				}]
+			},
+			"orderBy": 7
+		}, {
+			"id": 8,
+			"version": 0,
+			"name": "09",
+			"sequencerSize": 33,
+			"pads": {
+				"0": [{
+					"start": 0
+				}],
+				"1": [{
+					"start": 8
+				}],
+				"2": [{
+					"start": 16
+				}],
+				"3": [{
+					"start": 0
+				}],
+				"4": [{
+					"start": 16
+				}],
+				"5": [{
+					"start": 24
+				}],
+				"7": [{
+					"start": 4
+				}],
+				"9": [{
+					"start": 0
+				}, {
+					"start": 8
+				}, {
+					"start": 16
+				}, {
+					"start": 24
+				}],
+				"10": [{
+					"start": 2
+				}, {
+					"start": 6
+				}, {
+					"start": 10
+				}, {
+					"start": 14
+				}, {
+					"start": 18
+				}, {
+					"start": 22
+				}, {
+					"start": 26
+				}, {
+					"start": 30
+				}],
+				"11": [{
+					"start": 4
+				}, {
+					"start": 12
+				}, {
+					"start": 20
+				}, {
+					"start": 28
+				}],
+				"undefined": [{
+					"start": 31
+				}]
+			},
+			"orderBy": 8
+		}, {
+			"id": 9,
+			"version": 0,
+			"name": "10",
+			"sequencerSize": 129,
+			"pads": {
+				"0": [{
+					"start": 0
+				}, {
+					"start": 32
+				}, {
+					"start": 64
+				}, {
+					"start": 96
+				}],
+				"1": [{
+					"start": 8
+				}, {
+					"start": 40
+				}, {
+					"start": 72
+				}, {
+					"start": 104
+				}],
+				"2": [{
+					"start": 16
+				}, {
+					"start": 48
+				}, {
+					"start": 80
+				}, {
+					"start": 112
+				}],
+				"3": [{
+					"start": 64
+				}, {
+					"start": 96
+				}],
+				"4": [{
+					"start": 80
+				}, {
+					"start": 112
+				}],
+				"5": [{
+					"start": 24
+				}, {
+					"start": 56
+				}, {
+					"start": 88
+				}, {
+					"start": 120
+				}],
+				"6": [{
+					"start": 0
+				}, {
+					"start": 32
+				}],
+				"7": [{
+					"start": 100
+				}],
+				"8": [{
+					"start": 16
+				}, {
+					"start": 48
+				}],
+				"9": [{
+					"start": 0
+				}, {
+					"start": 8
+				}, {
+					"start": 16
+				}, {
+					"start": 24
+				}, {
+					"start": 32
+				}, {
+					"start": 40
+				}, {
+					"start": 48
+				}, {
+					"start": 56
+				}, {
+					"start": 64
+				}, {
+					"start": 72
+				}, {
+					"start": 80
+				}, {
+					"start": 88
+				}, {
+					"start": 96
+				}, {
+					"start": 104
+				}, {
+					"start": 112
+				}, {
+					"start": 120
+				}],
+				"10": [{
+					"start": 2
+				}, {
+					"start": 6
+				}, {
+					"start": 10
+				}, {
+					"start": 14
+				}, {
+					"start": 18
+				}, {
+					"start": 22
+				}, {
+					"start": 26
+				}, {
+					"start": 30
+				}, {
+					"start": 34
+				}, {
+					"start": 38
+				}, {
+					"start": 42
+				}, {
+					"start": 46
+				}, {
+					"start": 50
+				}, {
+					"start": 54
+				}, {
+					"start": 58
+				}, {
+					"start": 62
+				}, {
+					"start": 66
+				}, {
+					"start": 70
+				}, {
+					"start": 74
+				}, {
+					"start": 78
+				}, {
+					"start": 82
+				}, {
+					"start": 86
+				}, {
+					"start": 90
+				}, {
+					"start": 94
+				}, {
+					"start": 98
+				}, {
+					"start": 102
+				}, {
+					"start": 106
+				}, {
+					"start": 110
+				}, {
+					"start": 114
+				}, {
+					"start": 118
+				}, {
+					"start": 122
+				}, {
+					"start": 126
+				}],
+				"11": [{
+					"start": 4
+				}, {
+					"start": 12
+				}, {
+					"start": 20
+				}, {
+					"start": 28
+				}, {
+					"start": 36
+				}, {
+					"start": 44
+				}, {
+					"start": 52
+				}, {
+					"start": 60
+				}, {
+					"start": 68
+				}, {
+					"start": 76
+				}, {
+					"start": 84
+				}, {
+					"start": 92
+				}, {
+					"start": 100
+				}, {
+					"start": 108
+				}, {
+					"start": 116
+				}, {
+					"start": 124
+				}],
+				"undefined": [{
+					"start": 127
+				}]
+			},
+			"orderBy": 9
+		}, {
+			"id": 10,
+			"version": 0,
+			"name": "11",
+			"sequencerSize": 33,
+			"pads": {
+				"21": [{
+					"start": 0
+				}, {
+					"start": 8
+				}, {
+					"start": 16
+				}, {
+					"start": 24
+				}],
+				"22": [{
+					"start": 2
+				}, {
+					"start": 6
+				}, {
+					"start": 10
+				}, {
+					"start": 14
+				}, {
+					"start": 18
+				}, {
+					"start": 22
+				}, {
+					"start": 26
+				}, {
+					"start": 30
+				}],
+				"23": [{
+					"start": 4
+				}, {
+					"start": 12
+				}, {
+					"start": 20
+				}, {
+					"start": 28
+				}],
+				"undefined": [{
+					"start": 31
+				}]
+			},
+			"orderBy": 10
+		}, {
+			"id": 11,
+			"version": 0,
+			"name": "12",
+			"sequencerSize": 33,
+			"pads": {
+				"12": [{
+					"start": 0
+				}],
+				"13": [{
+					"start": 8
+				}],
+				"14": [{
+					"start": 16
+				}],
+				"15": [{
+					"start": 0
+				}],
+				"16": [{
+					"start": 16
+				}],
+				"17": [{
+					"start": 24
+				}],
+				"undefined": [{
+					"start": 31
+				}]
+			},
+			"orderBy": 11
+		}, {
+			"id": 12,
+			"version": 0,
+			"name": "13",
+			"sequencerSize": 33,
+			"pads": {
+				"12": [{
+					"start": 0
+				}],
+				"13": [{
+					"start": 8
+				}],
+				"14": [{
+					"start": 16
+				}],
+				"15": [{
+					"start": 0
+				}],
+				"16": [{
+					"start": 16
+				}],
+				"17": [{
+					"start": 24
+				}],
+				"21": [{
+					"start": 0
+				}, {
+					"start": 8
+				}, {
+					"start": 16
+				}, {
+					"start": 24
+				}],
+				"22": [{
+					"start": 2
+				}, {
+					"start": 6
+				}, {
+					"start": 10
+				}, {
+					"start": 14
+				}, {
+					"start": 18
+				}, {
+					"start": 22
+				}, {
+					"start": 26
+				}, {
+					"start": 30
+				}],
+				"23": [{
+					"start": 4
+				}, {
+					"start": 12
+				}, {
+					"start": 20
+				}, {
+					"start": 28
+				}],
+				"undefined": [{
+					"start": 31
+				}]
+			},
+			"orderBy": 12
+		}, {
+			"id": 13,
+			"version": 0,
+			"name": "14",
+			"sequencerSize": 33,
+			"pads": {
+				"12": [{
+					"start": 0
+				}],
+				"13": [{
+					"start": 8
+				}],
+				"14": [{
+					"start": 16
+				}],
+				"17": [{
+					"start": 24
+				}],
+				"18": [{
+					"start": 0
+				}],
+				"19": [{
+					"start": 8
+				}],
+				"20": [{
+					"start": 16
+				}],
+				"undefined": [{
+					"start": 31
+				}]
+			},
+			"orderBy": 13
+		}, {
+			"id": 14,
+			"version": 0,
+			"name": "15",
+			"sequencerSize": 33,
+			"pads": {
+				"12": [{
+					"start": 0
+				}],
+				"13": [{
+					"start": 8
+				}],
+				"14": [{
+					"start": 16
+				}],
+				"17": [{
+					"start": 24
+				}],
+				"18": [{
+					"start": 0
+				}],
+				"19": [{
+					"start": 8
+				}],
+				"20": [{
+					"start": 16
+				}],
+				"21": [{
+					"start": 0
+				}, {
+					"start": 8
+				}, {
+					"start": 16
+				}, {
+					"start": 24
+				}],
+				"22": [{
+					"start": 2
+				}, {
+					"start": 6
+				}, {
+					"start": 10
+				}, {
+					"start": 14
+				}, {
+					"start": 18
+				}, {
+					"start": 22
+				}, {
+					"start": 26
+				}, {
+					"start": 30
+				}],
+				"23": [{
+					"start": 4
+				}, {
+					"start": 12
+				}, {
+					"start": 20
+				}, {
+					"start": 28
+				}],
+				"undefined": [{
+					"start": 31
+				}]
+			},
+			"orderBy": 14
+		}, {
+			"id": 15,
+			"version": 0,
+			"name": "16",
+			"sequencerSize": 129,
+			"pads": {
+				"12": [{
+					"start": 0
+				}, {
+					"start": 32
+				}, {
+					"start": 64
+				}, {
+					"start": 96
+				}],
+				"13": [{
+					"start": 8
+				}, {
+					"start": 40
+				}, {
+					"start": 72
+				}, {
+					"start": 104
+				}],
+				"14": [{
+					"start": 16
+				}, {
+					"start": 48
+				}, {
+					"start": 80
+				}, {
+					"start": 112
+				}],
+				"15": [{
+					"start": 0
+				}, {
+					"start": 32
+				}],
+				"16": [{
+					"start": 16
+				}, {
+					"start": 48
+				}],
+				"17": [{
+					"start": 24
+				}, {
+					"start": 56
+				}, {
+					"start": 88
+				}, {
+					"start": 120
+				}],
+				"18": [{
+					"start": 64
+				}, {
+					"start": 96
+				}],
+				"19": [{
+					"start": 72
+				}, {
+					"start": 104
+				}],
+				"20": [{
+					"start": 80
+				}, {
+					"start": 112
+				}],
+				"21": [{
+					"start": 0
+				}, {
+					"start": 8
+				}, {
+					"start": 16
+				}, {
+					"start": 24
+				}, {
+					"start": 32
+				}, {
+					"start": 40
+				}, {
+					"start": 48
+				}, {
+					"start": 56
+				}, {
+					"start": 64
+				}, {
+					"start": 72
+				}, {
+					"start": 80
+				}, {
+					"start": 88
+				}, {
+					"start": 96
+				}, {
+					"start": 104
+				}, {
+					"start": 112
+				}, {
+					"start": 120
+				}],
+				"22": [{
+					"start": 2
+				}, {
+					"start": 6
+				}, {
+					"start": 10
+				}, {
+					"start": 14
+				}, {
+					"start": 18
+				}, {
+					"start": 22
+				}, {
+					"start": 26
+				}, {
+					"start": 30
+				}, {
+					"start": 34
+				}, {
+					"start": 38
+				}, {
+					"start": 42
+				}, {
+					"start": 46
+				}, {
+					"start": 50
+				}, {
+					"start": 54
+				}, {
+					"start": 58
+				}, {
+					"start": 62
+				}, {
+					"start": 66
+				}, {
+					"start": 70
+				}, {
+					"start": 74
+				}, {
+					"start": 78
+				}, {
+					"start": 82
+				}, {
+					"start": 86
+				}, {
+					"start": 90
+				}, {
+					"start": 94
+				}, {
+					"start": 98
+				}, {
+					"start": 102
+				}, {
+					"start": 106
+				}, {
+					"start": 110
+				}, {
+					"start": 114
+				}, {
+					"start": 118
+				}, {
+					"start": 122
+				}, {
+					"start": 126
+				}],
+				"23": [{
+					"start": 4
+				}, {
+					"start": 12
+				}, {
+					"start": 20
+				}, {
+					"start": 28
+				}, {
+					"start": 36
+				}, {
+					"start": 44
+				}, {
+					"start": 52
+				}, {
+					"start": 60
+				}, {
+					"start": 68
+				}, {
+					"start": 76
+				}, {
+					"start": 84
+				}, {
+					"start": 92
+				}, {
+					"start": 100
+				}, {
+					"start": 108
+				}, {
+					"start": 116
+				}, {
+					"start": 124
+				}],
+				"undefined": [{
+					"start": 127
+				}]
+			},
+			"orderBy": 15
+		}],
+		"v1": []
+	}
+}

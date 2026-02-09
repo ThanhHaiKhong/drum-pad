@@ -37,12 +37,24 @@ actor AudioEngineActor {
     func loadPreset(presetId: String) async throws {
         logger("Loading preset: \(presetId)")
 
-        // Construct the path to the preset file
-        let presetFilePath = "/Users/thanhhaikhong/Downloads/drumpad-550/drumpad-presets-\(presetId).json"
-        
+        // Load the preset file from bundle resources
+        guard let presetURL = Bundle.module.url(
+            forResource: "drumpad-presets-\(presetId)",
+            withExtension: "json",
+            subdirectory: "Presets"
+        ) else {
+            throw AudioEngineClient.Error.loadPresetFailed(
+                presetId: presetId,
+                underlyingError: NSError(
+                    domain: "AudioEngineClient",
+                    code: -1,
+                    userInfo: [NSLocalizedDescriptionKey: "Preset file not found in bundle"]
+                )
+            )
+        }
+
         do {
-            // Load the preset file from disk
-            let jsonData = try Data(contentsOf: URL(fileURLWithPath: presetFilePath))
+            let jsonData = try Data(contentsOf: presetURL)
             let decoder = JSONDecoder()
             let presetData = try decoder.decode(AudioEngineClient.PresetData.self, from: jsonData)
 
@@ -52,11 +64,20 @@ actor AudioEngineActor {
 
             for (key, file) in presetData.files {
                 if let intKey = Int(key) {
+                    // Resolve sample file URL from bundle
+                    guard let sampleURL = Bundle.module.url(
+                        forResource: file.filename.replacingOccurrences(of: ".wav", with: ""),
+                        withExtension: "wav",
+                        subdirectory: "Samples"
+                    ) else {
+                        throw AudioEngineClient.Error.sampleNotFound(path: file.filename)
+                    }
+
                     let sample = AudioEngineClient.Sample(
                         id: intKey,
                         filename: file.filename,
                         name: file.filename.replacingOccurrences(of: ".wav", with: ""),
-                        path: "/Users/thanhhaikhong/Downloads/drumpad-550/drumpad-550/\(file.filename)",
+                        path: sampleURL.absoluteString,
                         color: file.color,
                         chokeGroup: file.choke ?? 0
                     )
@@ -80,30 +101,35 @@ actor AudioEngineActor {
             let error = AudioEngineClient.Error.loadPresetFailed(presetId: presetId, underlyingError: decodingError)
             logger("Failed to decode preset \(presetId): \(decodingError)")
             throw error
-        } catch let fileError {
-            let error = AudioEngineClient.Error.loadPresetFailed(presetId: presetId, underlyingError: fileError)
-            logger("Failed to load preset file \(presetFilePath): \(fileError)")
+        } catch {
+            let error = AudioEngineClient.Error.loadPresetFailed(presetId: presetId, underlyingError: error)
+            logger("Failed to load preset \(presetId): \(error)")
             throw error
         }
     }
     
     func playSample(at path: String) async throws {
         logger("Playing sample at path: \(path)")
-        
+
+        // Convert path string (absolute URL) back to URL
+        guard let sampleURL = URL(string: path) else {
+            throw AudioEngineClient.Error.sampleNotFound(path: path)
+        }
+
         // Check if we already have a player for this file
         let playerId = path
         var player = players[playerId]
-        
+
         if player == nil {
-            player = AudioPlayer(url: URL(fileURLWithPath: path))
+            player = AudioPlayer(url: sampleURL)
             engine.output = player!
             players[playerId] = player
         }
-        
+
         guard let player = player else {
             throw AudioEngineClient.Error.sampleNotFound(path: path)
         }
-        
+
         player.play()
     }
     

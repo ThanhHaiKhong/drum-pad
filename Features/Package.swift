@@ -63,6 +63,9 @@ let package = Package(
                 .product(name: "ComposableArchitecture", package: "swift-composable-architecture"),
                 "AudioEngineClient",
                 "AudioKit"
+            ],
+            resources: [
+                .process("Resources")
             ]
         ),
     ]
