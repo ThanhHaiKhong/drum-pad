@@ -11,8 +11,8 @@ import AVFoundation
 actor AudioEngineActor {
     private var engine: AudioEngine
     private var players: [String: AudioPlayer] = [:]
-    private var samples: [Int: Sample] = [:]
-    private var pads: [Int: DrumPad] = [:]
+    private var samples: [Int: AudioEngineClient.Sample] = [:]
+    private var pads: [Int: AudioEngineClient.DrumPad] = [:]
     private var currentPreset: String?
     
     private let logger: @Sendable (String) -> Void
@@ -44,15 +44,15 @@ actor AudioEngineActor {
             // Load the preset file from disk
             let jsonData = try Data(contentsOf: URL(fileURLWithPath: presetFilePath))
             let decoder = JSONDecoder()
-            let presetData = try decoder.decode(PresetData.self, from: jsonData)
+            let presetData = try decoder.decode(AudioEngineClient.PresetData.self, from: jsonData)
 
             // Convert preset data to samples and pads
-            var newSamples: [Int: Sample] = [:]
-            var newPads: [Int: DrumPad] = [:]
+            var newSamples: [Int: AudioEngineClient.Sample] = [:]
+            var newPads: [Int: AudioEngineClient.DrumPad] = [:]
 
             for (key, file) in presetData.files {
                 if let intKey = Int(key) {
-                    let sample = Sample(
+                    let sample = AudioEngineClient.Sample(
                         id: intKey,
                         filename: file.filename,
                         name: file.filename.replacingOccurrences(of: ".wav", with: ""),
@@ -62,7 +62,7 @@ actor AudioEngineActor {
                     )
 
                     newSamples[intKey] = sample
-                    newPads[intKey] = DrumPad(
+                    newPads[intKey] = AudioEngineClient.DrumPad(
                         id: intKey,
                         sampleId: sample.id,
                         color: sample.color,
@@ -95,13 +95,9 @@ actor AudioEngineActor {
         var player = players[playerId]
         
         if player == nil {
-            do {
-                player = try AudioPlayer(url: URL(fileURLWithPath: path))
-                engine.output = player!
-                players[playerId] = player
-            } catch {
-                throw AudioEngineClient.Error.sampleNotFound(path: path)
-            }
+            player = AudioPlayer(url: URL(fileURLWithPath: path))
+            engine.output = player!
+            players[playerId] = player
         }
         
         guard let player = player else {
@@ -131,11 +127,11 @@ actor AudioEngineActor {
         players.removeAll()
     }
     
-    func loadedSamples() async -> [Int: Sample] {
+    func loadedSamples() async -> [Int: AudioEngineClient.Sample] {
         return samples
     }
-    
-    func drumPads() async -> [Int: DrumPad] {
+
+    func drumPads() async -> [Int: AudioEngineClient.DrumPad] {
         return pads
     }
     
@@ -155,7 +151,7 @@ actor AudioEngineActor {
         logger("Preset unloaded")
     }
     
-    func sampleForPad(padId: Int) async -> Sample? {
+    func sampleForPad(padId: Int) async -> AudioEngineClient.Sample? {
         return samples[padId]
     }
 }

@@ -6,5 +6,5 @@ import Foundation
 // are now defined in the AudioEngine module to avoid duplication.
 // This file can contain other shared schemas specific to the app.
 
-// AudioEngineState is now defined in the AudioEngine module to avoid duplication
+// State is now defined in the AudioEngine module to avoid duplication
 // This file can contain other shared schemas specific to the app.

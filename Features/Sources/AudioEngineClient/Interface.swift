@@ -57,12 +57,12 @@ public struct AudioEngineClient: Sendable {
     /// Returns the current list of loaded samples.
     ///
     /// - Returns: A dictionary mapping pad IDs to sample information
-    public var loadedSamples: @Sendable () async -> [Int: Sample] = { [:] }
+    public var loadedSamples: @Sendable () async -> [Int: AudioEngineClient.Sample] = { [:] }
 
     /// Returns the current list of drum pads.
     ///
     /// - Returns: A dictionary mapping pad IDs to drum pad information
-    public var drumPads: @Sendable () async -> [Int: DrumPad] = { [:] }
+    public var drumPads: @Sendable () async -> [Int: AudioEngineClient.DrumPad] = { [:] }
 
     /// Checks if a preset is currently loaded.
     ///
@@ -73,13 +73,13 @@ public struct AudioEngineClient: Sendable {
     ///
     /// - Returns: The identifier of the currently loaded preset, or nil if none
     public var currentPresetId: @Sendable () async -> String? = { nil }
-    
+
     /// Unloads the currently loaded preset.
     public var unloadPreset: @Sendable () async -> Void = { }
-    
+
     /// Gets the sample associated with a specific pad ID.
     ///
     /// - Parameter padId: The identifier of the drum pad
     /// - Returns: The sample associated with the pad, or nil if not found
-    public var sampleForPad: @Sendable (_ padId: Int) async -> Sample? = { _ in nil }
+    public var sampleForPad: @Sendable (_ padId: Int) async -> AudioEngineClient.Sample? = { _ in nil }
 }

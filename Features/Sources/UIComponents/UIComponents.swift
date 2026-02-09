@@ -6,11 +6,11 @@ import AudioEngineClient
 
 /// A drum pad button that plays a sound when tapped
 public struct DrumPadButton: View {
-    let pad: DrumPad
-    let samples: [Int: Sample]
+    let pad: AudioEngineClient.DrumPad
+    let samples: [Int: AudioEngineClient.Sample]
     let onTap: (Int) -> Void
 
-    public init(pad: DrumPad, samples: [Int: Sample], onTap: @escaping (Int) -> Void) {
+    public init(pad: AudioEngineClient.DrumPad, samples: [Int: AudioEngineClient.Sample], onTap: @escaping (Int) -> Void) {
         self.pad = pad
         self.samples = samples
         self.onTap = onTap
@@ -51,11 +51,11 @@ public struct DrumPadButtonStyle: ButtonStyle {
 
 /// Grid view to display drum pads in a grid
 public struct DrumPadGridView: View {
-    let pads: [Int: DrumPad]
-    let samples: [Int: Sample]
+    let pads: [Int: AudioEngineClient.DrumPad]
+    let samples: [Int: AudioEngineClient.Sample]
     let onPadTap: (Int) -> Void
 
-    public init(pads: [Int: DrumPad], samples: [Int: Sample], onPadTap: @escaping (Int) -> Void) {
+    public init(pads: [Int: AudioEngineClient.DrumPad], samples: [Int: AudioEngineClient.Sample], onPadTap: @escaping (Int) -> Void) {
         self.pads = pads
         self.samples = samples
         self.onPadTap = onPadTap

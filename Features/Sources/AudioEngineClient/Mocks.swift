@@ -86,7 +86,7 @@ extension AudioEngineClient {
         stopAll: { },
         loadedSamples: {
             [
-                1: Sample(
+                1: AudioEngineClient.Sample(
                     id: 1,
                     filename: "01.wav",
                     name: "Kick",
@@ -94,7 +94,7 @@ extension AudioEngineClient {
                     color: "red",
                     chokeGroup: 0
                 ),
-                2: Sample(
+                2: AudioEngineClient.Sample(
                     id: 2,
                     filename: "02.wav",
                     name: "Snare",
@@ -106,13 +106,13 @@ extension AudioEngineClient {
         },
         drumPads: {
             [
-                1: DrumPad(
+                1: AudioEngineClient.DrumPad(
                     id: 1,
                     sampleId: 1,
                     color: "red",
                     chokeGroup: 0
                 ),
-                2: DrumPad(
+                2: AudioEngineClient.DrumPad(
                     id: 2,
                     sampleId: 2,
                     color: "blue",
@@ -125,7 +125,7 @@ extension AudioEngineClient {
         unloadPreset: { },
         sampleForPad: { padId in
             [
-                1: Sample(
+                1: AudioEngineClient.Sample(
                     id: 1,
                     filename: "01.wav",
                     name: "Kick",
@@ -133,7 +133,7 @@ extension AudioEngineClient {
                     color: "red",
                     chokeGroup: 0
                 ),
-                2: Sample(
+                2: AudioEngineClient.Sample(
                     id: 2,
                     filename: "02.wav",
                     name: "Snare",
@@ -159,9 +159,9 @@ extension AudioEngineClient {
         stopAll: { },
         loadedSamples: {
             // Generate 24 samples based on the drum pad structure
-            var samples: [Int: Sample] = [:]
+            var samples: [Int: AudioEngineClient.Sample] = [:]
             for i in 1...24 {
-                samples[i] = Sample(
+                samples[i] = AudioEngineClient.Sample(
                     id: i,
                     filename: String(format: "%02d.wav", i),
                     name: "Sample \(i)",
@@ -173,9 +173,9 @@ extension AudioEngineClient {
             return samples
         },
         drumPads: {
-            var pads: [Int: DrumPad] = [:]
+            var pads: [Int: AudioEngineClient.DrumPad] = [:]
             for i in 1...24 {
-                pads[i] = DrumPad(
+                pads[i] = AudioEngineClient.DrumPad(
                     id: i,
                     sampleId: i,
                     color: ["red", "blue", "green", "yellow", "purple"].randomElement()!,
@@ -189,8 +189,8 @@ extension AudioEngineClient {
         unloadPreset: { },
         sampleForPad: { padId in
             // Generate sample based on padId
-            let samples = (1...24).reduce(into: [Int: Sample]()) { result, i in
-                result[i] = Sample(
+            let samples = (1...24).reduce(into: [Int: AudioEngineClient.Sample]()) { result, i in
+                result[i] = AudioEngineClient.Sample(
                     id: i,
                     filename: String(format: "%02d.wav", i),
                     name: "Sample \(i)",
