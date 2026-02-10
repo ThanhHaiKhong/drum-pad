@@ -4,35 +4,84 @@ import AudioEngineClient
 public struct DrumPadButton: View {
     let pad: AudioEngineClient.DrumPad
     let samples: [Int: AudioEngineClient.Sample]
+    let hasRecordedSample: Bool
+    let isRecording: Bool
     let onTap: (Int) -> Void
+    let onLongPress: (Int) -> Void
+    let onRelease: () -> Void
 
     public init(
         pad: AudioEngineClient.DrumPad,
         samples: [Int: AudioEngineClient.Sample],
-        onTap: @escaping (Int) -> Void
+        hasRecordedSample: Bool,
+        isRecording: Bool,
+        onTap: @escaping (Int) -> Void,
+        onLongPress: @escaping (Int) -> Void,
+        onRelease: @escaping () -> Void
     ) {
         self.pad = pad
         self.samples = samples
+        self.hasRecordedSample = hasRecordedSample
+        self.isRecording = isRecording
         self.onTap = onTap
+        self.onLongPress = onLongPress
+        self.onRelease = onRelease
     }
-    
+
     public var body: some View {
-        Button {
-            onTap(pad.id)
-        } label: {
-            RoundedRectangle(cornerRadius: 5)
-                .fill(Color(hex: pad.color) ?? .gray)
-                .opacity(0.8)
-                .overlay {
-                    if let sample = samples[pad.sampleId] {
-                        Text(sample.name.prefix(2).uppercased())
-                            .foregroundColor(.white)
-                            .fontWeight(.bold)
-                            .minimumScaleFactor(0.5)
+        ZStack {
+            // Main button
+            Button(action: {
+                onTap(pad.id)
+            }) {
+                RoundedRectangle(cornerRadius: 5)
+                    .fill(Color(hex: pad.color) ?? .gray)
+                    .opacity(0.8)
+                    .overlay {
+                        if let sample = samples[pad.sampleId] {
+                            Text(sample.name.prefix(2).uppercased())
+                                .foregroundColor(.white)
+                                .fontWeight(.bold)
+                                .minimumScaleFactor(0.5)
+                        }
                     }
-                }
+            }
+            .buttonStyle(DrumPadButtonStyle())
+            
+            // Recording indicator overlay - show when recording globally
+            if isRecording {
+                Circle()
+                    .stroke(Color.red, lineWidth: 4)
+                    .frame(width: 60, height: 60)
+            }
+            
+            // Visual indicator for recorded sample
+            if hasRecordedSample {
+                Circle()
+                    .stroke(Color.blue, lineWidth: 2)
+                    .frame(width: 20, height: 20)
+                    .position(x: 20, y: 20)
+            }
         }
-        .buttonStyle(DrumPadButtonStyle())
+        .simultaneousGesture(
+            LongPressGesture(minimumDuration: 0.1)
+                .onEnded { _ in
+                    onLongPress(pad.id)
+                }
+        )
+        .onLongPressGesture(
+            minimumDuration: 0.1,
+            maximumDistance: 100,
+            perform: {
+                // Perform action when long press completes
+                onLongPress(pad.id)
+            },
+            onPressingChanged: { pressing in
+                if !pressing {
+                    onRelease()
+                }
+            }
+        )
     }
 }
 
@@ -50,23 +99,45 @@ public struct DrumPadButtonStyle: ButtonStyle {
 public struct DrumPadGridView: View {
     let pads: [Int: AudioEngineClient.DrumPad]
     let samples: [Int: AudioEngineClient.Sample]
+    let hasRecordedSamples: [Int: Bool] // Dictionary indicating which pads have recorded samples
+    let isRecording: Bool
+    let activeRecordingPadId: Int?
     let onPadTap: (Int) -> Void
+    let onPadLongPress: (Int) -> Void
+    let onPadRelease: () -> Void
 
-    public init(pads: [Int: AudioEngineClient.DrumPad], samples: [Int: AudioEngineClient.Sample], onPadTap: @escaping (Int) -> Void) {
+    public init(
+        pads: [Int: AudioEngineClient.DrumPad],
+        samples: [Int: AudioEngineClient.Sample],
+        hasRecordedSamples: [Int: Bool],
+        isRecording: Bool,
+        activeRecordingPadId: Int?, // Still keeping this for potential future use
+        onPadTap: @escaping (Int) -> Void,
+        onPadLongPress: @escaping (Int) -> Void,
+        onPadRelease: @escaping () -> Void
+    ) {
         self.pads = pads
         self.samples = samples
+        self.hasRecordedSamples = hasRecordedSamples
+        self.isRecording = isRecording
+        self.activeRecordingPadId = activeRecordingPadId
         self.onPadTap = onPadTap
+        self.onPadLongPress = onPadLongPress
+        self.onPadRelease = onPadRelease
     }
-    
+
     public var body: some View {
         LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 10), count: 4), spacing: 10) {
             ForEach(Array(pads.sorted(by: { $0.key < $1.key }).map { $0.value }), id: \.id) { pad in
                 DrumPadButton(
                     pad: pad,
-                    samples: samples
-                ) { padId in
-                    onPadTap(padId)
-                }
+                    samples: samples,
+                    hasRecordedSample: hasRecordedSamples[pad.id] ?? false,
+                    isRecording: isRecording, // Show recording state globally
+                    onTap: onPadTap,
+                    onLongPress: onPadLongPress,
+                    onRelease: onPadRelease
+                )
             }
         }
         .padding()

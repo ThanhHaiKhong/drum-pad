@@ -1,15 +1,10 @@
-//
-//  Live.swift
-//  AudioEngineClientLive
-//
-
 import ComposableArchitecture
 import AudioEngineClient
 import AudioKit
 import Foundation
 
 extension AudioEngineClient: DependencyKey {
-    public static let liveValue: AudioEngineClient = {        
+    public static let liveValue: AudioEngineClient = {
         let actor = AudioEngineActor()
 
         return AudioEngineClient(
@@ -42,6 +37,18 @@ extension AudioEngineClient: DependencyKey {
             },
             sampleForPad: { padId in
                 return await actor.sampleForPad(padId: padId)
+            },
+            startRecording: {
+                try await actor.startRecording()
+            },
+            stopRecording: {
+                try await actor.stopRecording()
+            },
+            isRecording: {
+                return await actor.isRecording()
+            },
+            playRecordedAudio: {
+                try await actor.playRecordedAudio()
             }
         )
     }()

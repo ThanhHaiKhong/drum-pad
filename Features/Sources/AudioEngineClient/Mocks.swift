@@ -6,14 +6,10 @@
 import Dependencies
 import Foundation
 
-// MARK: - Constants
-
 private enum MockConstants {
-    /// Mock play delay in nanoseconds (50ms) - simulates audio processing time
     static let playDelayNanoseconds: UInt64 = 50_000_000
-
-    /// Load delay in nanoseconds (100ms) - simulates preset loading time
     static let loadDelayNanoseconds: UInt64 = 100_000_000
+    static let recordingDelayNanoseconds: UInt64 = 100_000_000
 }
 
 extension DependencyValues {
@@ -42,7 +38,11 @@ extension AudioEngineClient {
         isPresetLoaded: { false },
         currentPresetId: { nil },
         unloadPreset: { },
-        sampleForPad: { _ in nil }
+        sampleForPad: { _ in nil },
+        startRecording: { },
+        stopRecording: { nil },
+        isRecording: { false },
+        playRecordedAudio: { }
     )
 
     /// A failing implementation that throws errors for operations.
@@ -67,7 +67,17 @@ extension AudioEngineClient {
         isPresetLoaded: { false },
         currentPresetId: { nil },
         unloadPreset: { },
-        sampleForPad: { _ in nil }
+        sampleForPad: { _ in nil },
+        startRecording: {
+            try await Task.sleep(nanoseconds: MockConstants.recordingDelayNanoseconds)
+            throw URLError(.cannotOpenFile)
+        },
+        stopRecording: {
+            try await Task.sleep(nanoseconds: MockConstants.recordingDelayNanoseconds)
+            throw URLError(.cannotOpenFile)
+        },
+        isRecording: { false },
+        playRecordedAudio: { }
     )
 
     /// A successful implementation with mock audio operations.
@@ -142,7 +152,17 @@ extension AudioEngineClient {
                     chokeGroup: 0
                 )
             ][padId]
-        }
+        },
+        startRecording: {
+            try await Task.sleep(nanoseconds: MockConstants.recordingDelayNanoseconds)
+            print("Started global recording")
+        },
+        stopRecording: {
+            try await Task.sleep(nanoseconds: MockConstants.recordingDelayNanoseconds)
+            return "/mock/path/recording_\(Date().timeIntervalSince1970).caf"
+        },
+        isRecording: { true },
+        playRecordedAudio: { }
     )
 
     /// A mock that simulates a loaded preset with multiple samples
@@ -200,6 +220,15 @@ extension AudioEngineClient {
                 )
             }
             return samples[padId]
-        }
+        },
+        startRecording: {
+            try await Task.sleep(nanoseconds: MockConstants.recordingDelayNanoseconds)
+        },
+        stopRecording: {
+            try await Task.sleep(nanoseconds: MockConstants.recordingDelayNanoseconds)
+            return "/mock/path/recording_\(Date().timeIntervalSince1970).caf"
+        },
+        isRecording: { true },
+        playRecordedAudio: { }
     )
 }

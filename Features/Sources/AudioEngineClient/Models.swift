@@ -6,13 +6,7 @@
 import Foundation
 import ComposableArchitecture
 
-// MARK: - Nested Types
-
 extension AudioEngineClient {
-    
-    // MARK: Sample
-    
-    /// Represents an audio sample
     public struct Sample: Codable, Identifiable, Equatable, Sendable {
         public let id: Int
         public let filename: String
@@ -31,9 +25,6 @@ extension AudioEngineClient {
         }
     }
 
-    // MARK: DrumPad
-
-    /// Represents a drum pad
     public struct DrumPad: Codable, Identifiable, Equatable, Sendable {
         public let id: Int
         public let sampleId: Int
@@ -48,9 +39,6 @@ extension AudioEngineClient {
         }
     }
 
-    // MARK: PresetData
-
-    /// Represents a preset configuration
     public struct PresetData: Codable, Sendable {
         public let id: String
         public let name: String
@@ -77,9 +65,6 @@ extension AudioEngineClient {
         }
     }
 
-    // MARK: State
-
-    /// Represents the state of the audio engine
     public struct State: Codable, Equatable, Sendable {
         public var samples: [Int: Sample] = [:]
         public var pads: [Int: DrumPad] = [:]
@@ -91,21 +76,15 @@ extension AudioEngineClient {
         public init() {}
     }
 
-    // MARK: - AudioEngineError
-
-    /// Errors that can occur during audio engine operations
     public enum `Error`: Swift.Error, Sendable, LocalizedError {
-        /// Failed to load a preset
         case loadPresetFailed(presetId: String, underlyingError: Swift.Error)
-
-        /// Failed to play a sample
         case playSampleFailed(path: String, underlyingError: Swift.Error)
-
-        /// Sample not found
         case sampleNotFound(path: String)
-
-        /// Pad not found
         case padNotFound(padId: Int)
+        case recordingInProgress
+        case invalidPadId(Int)
+        case startRecordingFailed(underlyingError: Swift.Error)
+        case stopRecordingFailed(underlyingError: Swift.Error)
 
         public var errorDescription: String? {
             switch self {
@@ -117,6 +96,14 @@ extension AudioEngineClient {
                 return "Sample not found at path: \(path)"
             case .padNotFound(let padId):
                 return "Drum pad not found with ID: \(padId)"
+            case .recordingInProgress:
+                return "Cannot perform operation while recording is in progress"
+            case .invalidPadId(let padId):
+                return "Invalid pad ID for recording: \(padId)"
+            case .startRecordingFailed(let error):
+                return "Failed to start recording: \(error.localizedDescription)"
+            case .stopRecordingFailed(let error):
+                return "Failed to stop recording: \(error.localizedDescription)"
             }
         }
     }
