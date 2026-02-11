@@ -37,8 +37,6 @@ extension AudioEngineClient {
         drumPads: { [:] },
         isPresetLoaded: { false },
         currentPresetId: { nil },
-        unloadPreset: { },
-        sampleForPad: { _ in nil },
         startRecording: { },
         stopRecording: { nil },
         isRecording: { false },
@@ -66,8 +64,6 @@ extension AudioEngineClient {
         drumPads: { [:] },
         isPresetLoaded: { false },
         currentPresetId: { nil },
-        unloadPreset: { },
-        sampleForPad: { _ in nil },
         startRecording: {
             try await Task.sleep(nanoseconds: MockConstants.recordingDelayNanoseconds)
             throw URLError(.cannotOpenFile)
@@ -132,27 +128,6 @@ extension AudioEngineClient {
         },
         isPresetLoaded: { true },
         currentPresetId: { "550" },
-        unloadPreset: { },
-        sampleForPad: { padId in
-            [
-                1: AudioEngineClient.Sample(
-                    id: 1,
-                    filename: "01.wav",
-                    name: "Kick",
-                    path: "/mock/path/01.wav",
-                    color: "red",
-                    chokeGroup: 0
-                ),
-                2: AudioEngineClient.Sample(
-                    id: 2,
-                    filename: "02.wav",
-                    name: "Snare",
-                    path: "/mock/path/02.wav",
-                    color: "blue",
-                    chokeGroup: 0
-                )
-            ][padId]
-        },
         startRecording: {
             try await Task.sleep(nanoseconds: MockConstants.recordingDelayNanoseconds)
             print("Started global recording")
@@ -206,21 +181,6 @@ extension AudioEngineClient {
         },
         isPresetLoaded: { true },
         currentPresetId: { "550" },
-        unloadPreset: { },
-        sampleForPad: { padId in
-            // Generate sample based on padId
-            let samples = (1...24).reduce(into: [Int: AudioEngineClient.Sample]()) { result, i in
-                result[i] = AudioEngineClient.Sample(
-                    id: i,
-                    filename: String(format: "%02d.wav", i),
-                    name: "Sample \(i)",
-                    path: "/mock/path/\(String(format: "%02d.wav", i))",
-                    color: ["red", "blue", "green", "yellow", "purple"].randomElement()!,
-                    chokeGroup: i % 4
-                )
-            }
-            return samples[padId]
-        },
         startRecording: {
             try await Task.sleep(nanoseconds: MockConstants.recordingDelayNanoseconds)
         },

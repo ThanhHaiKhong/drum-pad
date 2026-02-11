@@ -32,12 +32,6 @@ extension AudioEngineClient: DependencyKey {
             currentPresetId: {
                 return await actor.currentPresetId()
             },
-            unloadPreset: {
-                await actor.unloadPreset()
-            },
-            sampleForPad: { padId in
-                return await actor.sampleForPad(padId: padId)
-            },
             startRecording: {
                 try await actor.startRecording()
             },

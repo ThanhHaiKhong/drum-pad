@@ -165,16 +165,16 @@ public struct ComposeStore: Sendable {
                     while await audioEngine.isRecording() {
                         // We'll pass nil for activePadId since recording is global
                         await send(.updateRecordingState(true, nil))
-                        
+
                         // Small delay to prevent excessive updates
                         try? await Task.sleep(nanoseconds: 100_000_000) // 100ms
                     }
-                    
+
                     // Update final state when recording stops
                     let isRecording = await audioEngine.isRecording()
                     // Pass nil for activePadId since recording is global
                     let activePadId: Int? = nil
-                    
+
                     await send(.updateRecordingState(isRecording, activePadId))
                 }
                 

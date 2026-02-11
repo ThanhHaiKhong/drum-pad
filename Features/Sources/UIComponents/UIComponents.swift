@@ -194,28 +194,81 @@ public struct ErrorAlert: View {
     }
 }
 
-// Extension to create UIColor from hex string
+// Extension to create Color from hex string or named color
 extension Color {
     init?(hex: String) {
+        // First, try to parse as hex
         var hexSanitized = hex.trimmingCharacters(in: .whitespacesAndNewlines)
         hexSanitized = hexSanitized.replacingOccurrences(of: "#", with: "")
         
+        // If it's a named color, convert to corresponding Color
+        switch hexSanitized.lowercased() {
+        case "red":
+            self = .red
+            return
+        case "blue":
+            self = .blue
+            return
+        case "green":
+            self = .green
+            return
+        case "yellow":
+            self = .yellow
+            return
+        case "orange":
+            self = .orange
+            return
+        case "purple":
+            self = .purple
+            return
+        case "pink":
+            self = .pink
+            return
+        case "brown":
+            self = .brown
+            return
+        case "cyan":
+            self = .cyan
+            return
+        case "gray", "grey":
+            self = .gray
+            return
+        case "black":
+            self = .black
+            return
+        case "white":
+            self = .white
+            return
+        case "mint":
+            self = .mint
+            return
+        case "teal":
+            self = .teal
+            return
+        case "indigo":
+            self = .indigo
+            return
+        default:
+            break
+        }
+
+        // If not a named color, try parsing as hex
         var rgb: UInt64 = 0
-        
+
         var r: CGFloat = 0.0
         var g: CGFloat = 0.0
         var b: CGFloat = 0.0
         var a: CGFloat = 1.0
-        
+
         let length = hexSanitized.count
-        
+
         guard Scanner(string: hexSanitized).scanHexInt64(&rgb) else { return nil }
-        
+
         if length == 6 {
             r = CGFloat((rgb & 0xFF0000) >> 16) / 255.0
             g = CGFloat((rgb & 0x00FF00) >> 8) / 255.0
             b = CGFloat(rgb & 0x0000FF) / 255.0
-            
+
         } else if length == 8 {
             r = CGFloat((rgb & 0xFF000000) >> 24) / 255.0
             g = CGFloat((rgb & 0x00FF0000) >> 16) / 255.0
@@ -224,7 +277,7 @@ extension Color {
         } else {
             return nil
         }
-        
+
         self.init(red: r, green: g, blue: b, opacity: a)
     }
 }

@@ -187,17 +187,11 @@ actor AudioEngineActor {
         return currentPreset
     }
 
-    func unloadPreset() async {
-        logger("Unloading preset")
-        samples = [:]
-        pads = [:]
-        currentPreset = nil
-        logger("Preset unloaded")
-    }
 
-    func sampleForPad(padId: Int) async -> AudioEngineClient.Sample? {
-        return samples[padId]
+    func isRecording() async -> Bool {
+        return recordingStartTime != nil
     }
+    
     
     func startRecording() async throws {
         logger("Starting pad-only recording with AVAudioEngine")
@@ -221,7 +215,7 @@ actor AudioEngineActor {
         recordingStartTimeOffset = CACurrentMediaTime()
         isRecordingOnlyPadSounds = true
         recordedEvents = []  // Clear any previous events
-        
+
         // Setup AVAudioEngine for recording
         setupAVAudioEngineForRecording(outputPath: filePath)
 
@@ -421,9 +415,6 @@ actor AudioEngineActor {
         }
     }
     
-    func isRecording() async -> Bool {
-        return recordingStartTime != nil
-    }
     
     func playRecordedAudio() async throws {
         guard let recordedFilePath = lastRecordedFilePath else {
