@@ -9,11 +9,10 @@ public struct ComposeStore: Sendable {
         public var audioEngineState: AudioEngineClient.State = .init()
         public var selectedPreset: String = ""
         public var isPlaying: Bool = false
-        public var selectedPadCount: Int = 16 // Default to 16 pads
-
-        // New properties for recording
+        public var selectedPadCount: Int = 8
         public var isRecording: Bool = false
         public var activeRecordingPadId: Int? = nil
+        public var selectedTab: State.Tab = .composer
 
         public init() {}
     }
@@ -28,8 +27,6 @@ public struct ComposeStore: Sendable {
         case stopAllResponse
         case updateAudioEngineState(AudioEngineClient.State)
         case selectPadCount(Int)
-
-        // New actions for recording
         case startRecording
         case startRecordingResponse(TaskResult<Void>)
         case stopRecording
@@ -45,189 +42,278 @@ public struct ComposeStore: Sendable {
         Reduce { state, action in
             switch action {
             case .onAppear:
-                return .run { send in
-                    // Initialize the audio engine
-                    do {
-                        // Try to load the default preset
-                        try await audioEngine.loadPreset("550")
-
-                        let samples = await audioEngine.loadedSamples()
-                        let pads = await audioEngine.drumPads()
-                        let currentPresetId = await audioEngine.currentPresetId()
-
-                        var newState = AudioEngineClient.State()
-                        newState.samples = samples
-                        newState.pads = pads
-                        newState.currentPreset = currentPresetId ?? ""
-                        newState.loadedSamplesCount = samples.count
-                        newState.totalSamplesCount = pads.count
-
-                        await send(.updateAudioEngineState(newState))
-                    } catch {
-                        print("Failed to initialize audio engine: \(error)")
-                    }
-                    
-                    // Also initialize recording state
-                    await send(.updateRecordingState(false, nil))
-                }
-
+                return handleOnAppear()
+                
             case .loadPreset(let presetId):
-                return .run { send in
-                    var newState = AudioEngineClient.State()
-                    newState.samples = [:]
-                    newState.pads = [:]
-                    newState.currentPreset = presetId
-                    newState.loadedSamplesCount = 0
-                    newState.totalSamplesCount = 0
-
-                    await send(.updateAudioEngineState(newState))
-
-                    let result = await TaskResult {
-                        try await audioEngine.loadPreset(presetId)
-
-                        let samples = await audioEngine.loadedSamples()
-                        let pads = await audioEngine.drumPads()
-
-                        var updatedState = AudioEngineClient.State()
-                        updatedState.samples = samples
-                        updatedState.pads = pads
-                        updatedState.currentPreset = presetId
-                        updatedState.loadedSamplesCount = samples.count
-                        updatedState.totalSamplesCount = pads.count
-
-                        return updatedState
-                    }
-
-                    await send(.loadPresetResponse(result))
-                }
-
+                return handleLoadPreset(state: &state, presetId: presetId)
+                
             case .loadPresetResponse(.success(let newState)):
-                state.audioEngineState = newState
-                return .none
-
+                return handleLoadPresetResponseSuccess(state: &state, newState: newState)
+                
             case .loadPresetResponse(.failure(let error)):
-                print("Failed to load preset: \(error)")
-                return .none
-
+                return handleLoadPresetResponseFailure(error: error)
+                
             case .playPad(let padId):
-                return .run { send in
-                    let result = await TaskResult {
-                        try await audioEngine.playPad(padId)
-                    }
-
-                    await send(.playPadResponse(result))
-                }
-
+                return handlePlayPad(padId: padId)
+                
             case .playPadResponse(.success):
-                state.isPlaying = true
-                return .none
-
+                return handlePlayPadResponseSuccess(state: &state)
+                
             case .playPadResponse(.failure(let error)):
-                print("Failed to play pad: \(error)")
-                return .none
-
+                return handlePlayPadResponseFailure(error: error)
+                
             case .stopAll:
-                let currentState = state.audioEngineState
-                return .run { send in
-                    await audioEngine.stopAll()
-
-                    var newState = AudioEngineClient.State()
-                    newState.samples = currentState.samples
-                    newState.pads = currentState.pads
-                    newState.currentPreset = currentState.currentPreset
-                    newState.loadedSamplesCount = currentState.loadedSamplesCount
-                    newState.totalSamplesCount = currentState.totalSamplesCount
-                    newState.isPlaying = false
-
-                    await send(.updateAudioEngineState(newState))
-                }
-
+                return handleStopAll(state: &state)
+                
             case .stopAllResponse:
-                state.isPlaying = false
-                return .none
-
+                return handleStopAllResponse(state: &state)
+                
             case .updateAudioEngineState(let newState):
-                state.audioEngineState = newState
-                return .none
-
+                return handleUpdateAudioEngineState(state: &state, newState: newState)
+                
             case .selectPadCount(let count):
-                state.selectedPadCount = count
-                return .none
-
-            // New recording actions
+                return handleSelectPadCount(state: &state, count: count)
+                
             case .startRecording:
-                return .run { send in
-                    let result = await TaskResult {
-                        try await audioEngine.startRecording()
-                    }
-                    
-                    await send(.startRecordingResponse(result))
-                }
+                return handleStartRecording()
                 
             case .startRecordingResponse(.success):
-                // Start monitoring recording progress
-                return .run { send in
-                    // Monitor recording progress until it stops
-                    while await audioEngine.isRecording() {
-                        // We'll pass nil for activePadId since recording is global
-                        await send(.updateRecordingState(true, nil))
-
-                        // Small delay to prevent excessive updates
-                        try? await Task.sleep(nanoseconds: 100_000_000) // 100ms
-                    }
-
-                    // Update final state when recording stops
-                    let isRecording = await audioEngine.isRecording()
-                    // Pass nil for activePadId since recording is global
-                    let activePadId: Int? = nil
-
-                    await send(.updateRecordingState(isRecording, activePadId))
-                }
+                return handleStartRecordingResponseSuccess()
                 
             case .startRecordingResponse(.failure(let error)):
-                print("Failed to start recording: \(error)")
-                return .send(.updateRecordingState(false, nil))
+                return handleStartRecordingResponseFailure(error: error)
                 
             case .stopRecording:
-                return .run { send in
-                    let result = await TaskResult {
-                        try await audioEngine.stopRecording()
-                    }
-                    
-                    await send(.stopRecordingResponse(result))
-                }
+                return handleStopRecording()
                 
             case .stopRecordingResponse(.success(let filePath)):
-                print("Recording stopped successfully, saved to: \(filePath ?? "unknown")")
-                return .send(.updateRecordingState(false, nil))
+                return handleStopRecordingResponseSuccess(filePath: filePath)
                 
             case .stopRecordingResponse(.failure(let error)):
-                print("Failed to stop recording: \(error)")
-                return .send(.updateRecordingState(false, nil))
+                return handleStopRecordingResponseFailure(error: error)
                 
             case .updateRecordingState(let isRecording, let activePadId):
-                state.isRecording = isRecording
-                state.activeRecordingPadId = activePadId
-                return .none
+                return handleUpdateRecordingState(state: &state, isRecording: isRecording, activePadId: activePadId)
                 
             case .playRecordedAudio:
-                return .run { send in
-                    let result = await TaskResult {
-                        try await audioEngine.playRecordedAudio()
-                    }
-                    
-                    await send(.playRecordedAudioResponse(result))
-                }
+                return handlePlayRecordedAudio()
                 
             case .playRecordedAudioResponse(.success):
-                return .none
+                return handlePlayRecordedAudioResponseSuccess()
                 
             case .playRecordedAudioResponse(.failure(let error)):
-                print("Failed to play recorded audio: \(error)")
-                return .none
+                return handlePlayRecordedAudioResponseFailure(error: error)
             }
         }
     }
+    
+    private func handleOnAppear() -> Effect<Action> {
+        return .run { send in
+            try await audioEngine.loadPreset("550")
+
+            let samples = await audioEngine.loadedSamples()
+            let pads = await audioEngine.drumPads()
+            let currentPresetId = await audioEngine.currentPresetId()
+
+            var newState = AudioEngineClient.State()
+            newState.samples = samples
+            newState.pads = pads
+            newState.currentPreset = currentPresetId ?? ""
+            newState.loadedSamplesCount = samples.count
+            newState.totalSamplesCount = pads.count
+
+            await send(.updateAudioEngineState(newState))
+        } catch: { error, send in
+            print("Failed to initialize audio engine: \(error)")
+            await send(.updateRecordingState(false, nil))
+        }
+    }
+    
+    private func handleLoadPreset(state: inout State, presetId: String) -> Effect<Action> {
+        return .run { send in
+            var newState = AudioEngineClient.State()
+            newState.samples = [:]
+            newState.pads = [:]
+            newState.currentPreset = presetId
+            newState.loadedSamplesCount = 0
+            newState.totalSamplesCount = 0
+
+            await send(.updateAudioEngineState(newState))
+
+            let result = await TaskResult {
+                try await audioEngine.loadPreset(presetId)
+
+                let samples = await audioEngine.loadedSamples()
+                let pads = await audioEngine.drumPads()
+
+                var updatedState = AudioEngineClient.State()
+                updatedState.samples = samples
+                updatedState.pads = pads
+                updatedState.currentPreset = presetId
+                updatedState.loadedSamplesCount = samples.count
+                updatedState.totalSamplesCount = pads.count
+
+                return updatedState
+            }
+
+            await send(.loadPresetResponse(result))
+        }
+    }
+    
+    private func handleLoadPresetResponseSuccess(state: inout State, newState: AudioEngineClient.State) -> Effect<Action> {
+        state.audioEngineState = newState
+        return .none
+    }
+    
+    private func handleLoadPresetResponseFailure(error: Error) -> Effect<Action> {
+        print("Failed to load preset: \(error)")
+        return .none
+    }
+    
+    private func handlePlayPad(padId: Int) -> Effect<Action> {
+        return .run { send in
+            let result = await TaskResult {
+                try await audioEngine.playPad(padId)
+            }
+
+            await send(.playPadResponse(result))
+        }
+    }
+    
+    private func handlePlayPadResponseSuccess(state: inout State) -> Effect<Action> {
+        state.isPlaying = true
+        return .none
+    }
+    
+    private func handlePlayPadResponseFailure(error: Error) -> Effect<Action> {
+        print("Failed to play pad: \(error)")
+        return .none
+    }
+    
+    private func handleStopAll(state: inout State) -> Effect<Action> {
+        let currentState = state.audioEngineState
+        return .run { send in
+            await audioEngine.stopAll()
+
+            var newState = AudioEngineClient.State()
+            newState.samples = currentState.samples
+            newState.pads = currentState.pads
+            newState.currentPreset = currentState.currentPreset
+            newState.loadedSamplesCount = currentState.loadedSamplesCount
+            newState.totalSamplesCount = currentState.totalSamplesCount
+            newState.isPlaying = false
+
+            await send(.updateAudioEngineState(newState))
+        }
+    }
+    
+    private func handleStopAllResponse(state: inout State) -> Effect<Action> {
+        state.isPlaying = false
+        return .none
+    }
+    
+    private func handleUpdateAudioEngineState(state: inout State, newState: AudioEngineClient.State) -> Effect<Action> {
+        state.audioEngineState = newState
+        return .none
+    }
+    
+    private func handleSelectPadCount(state: inout State, count: Int) -> Effect<Action> {
+        state.selectedPadCount = count
+        return .none
+    }
+    
+    // New recording action handlers
+    private func handleStartRecording() -> Effect<Action> {
+        return .run { send in
+            let result = await TaskResult {
+                try await audioEngine.startRecording()
+            }
+
+            await send(.startRecordingResponse(result))
+        }
+    }
+    
+    private func handleStartRecordingResponseSuccess() -> Effect<Action> {
+        // Start monitoring recording progress
+        return .run { send in
+            // Monitor recording progress until it stops
+            while await audioEngine.isRecording() {
+                // We'll pass nil for activePadId since recording is global
+                await send(.updateRecordingState(true, nil))
+
+                // Small delay to prevent excessive updates
+                try? await Task.sleep(nanoseconds: 100_000_000) // 100ms
+            }
+
+            // Update final state when recording stops
+            let isRecording = await audioEngine.isRecording()
+            // Pass nil for activePadId since recording is global
+            let activePadId: Int? = nil
+
+            await send(.updateRecordingState(isRecording, activePadId))
+        }
+    }
+    
+    private func handleStartRecordingResponseFailure(error: Error) -> Effect<Action> {
+        print("Failed to start recording: \(error)")
+        return .send(.updateRecordingState(false, nil))
+    }
+    
+    private func handleStopRecording() -> Effect<Action> {
+        return .run { send in
+            let result = await TaskResult {
+                try await audioEngine.stopRecording()
+            }
+
+            await send(.stopRecordingResponse(result))
+        }
+    }
+    
+    private func handleStopRecordingResponseSuccess(filePath: String?) -> Effect<Action> {
+        print("Recording stopped successfully, saved to: \(filePath ?? "unknown")")
+        return .send(.updateRecordingState(false, nil))
+    }
+    
+    private func handleStopRecordingResponseFailure(error: Error) -> Effect<Action> {
+        print("Failed to stop recording: \(error)")
+        return .send(.updateRecordingState(false, nil))
+    }
+    
+    private func handleUpdateRecordingState(state: inout State, isRecording: Bool, activePadId: Int?) -> Effect<Action> {
+        state.isRecording = isRecording
+        state.activeRecordingPadId = activePadId
+        return .none
+    }
+    
+    private func handlePlayRecordedAudio() -> Effect<Action> {
+        return .run { send in
+            let result = await TaskResult {
+                try await audioEngine.playRecordedAudio()
+            }
+
+            await send(.playRecordedAudioResponse(result))
+        }
+    }
+    
+    private func handlePlayRecordedAudioResponseSuccess() -> Effect<Action> {
+        return .none
+    }
+    
+    private func handlePlayRecordedAudioResponseFailure(error: Error) -> Effect<Action> {
+        print("Failed to play recorded audio: \(error)")
+        return .none
+    }
 
     public init() {}
+}
+
+extension ComposeStore.State {
+    public enum Tab: String, Identifiable, CaseIterable, Equatable, Sendable {
+        case composer
+        case explore
+        case saved
+        case settings
+        
+        public var id: String { self.rawValue }
+    }
 }

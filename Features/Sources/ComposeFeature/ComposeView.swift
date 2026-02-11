@@ -12,13 +12,21 @@ public struct ComposeView: View {
 
     public var body: some View {
         ScrollView(showsIndicators: false) {
-            VStack {
-                HStack {
-                    Text("Composer")
-                        .font(.title)
-                        .fontWeight(.bold)
-
-                    Spacer()
+            VStack(spacing: 20) {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack {
+                        ForEach(ComposeStore.State.Tab.allCases) { tab in
+                            Button {
+                                
+                            } label: {
+                                Text(tab.rawValue)
+                                    .font(.title3)
+                                    .fontWeight(.bold)
+                                    .foregroundStyle(store.selectedTab == tab ? .primary : .secondary)
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
                 }
 
                 // Pad count selection controls
@@ -33,8 +41,8 @@ public struct ComposeView: View {
                             store.send(.selectPadCount(count))
                         } label: {
                             Text("\(count)")
-                                .padding(.horizontal, 10)
-                                .padding(.vertical, 5)
+                                .font(.headline)
+                                .frame(width: 40, height: 34)
                                 .background(
                                     count == store.selectedPadCount
                                         ? Color.blue
