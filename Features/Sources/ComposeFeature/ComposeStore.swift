@@ -9,7 +9,8 @@ public struct ComposeStore: Sendable {
         public var audioEngineState: AudioEngineClient.State = .init()
         public var selectedPreset: String = ""
         public var isPlaying: Bool = false
-        
+        public var selectedPadCount: Int = 16 // Default to 16 pads
+
         // New properties for recording
         public var isRecording: Bool = false
         public var activeRecordingPadId: Int? = nil
@@ -26,7 +27,8 @@ public struct ComposeStore: Sendable {
         case stopAll
         case stopAllResponse
         case updateAudioEngineState(AudioEngineClient.State)
-        
+        case selectPadCount(Int)
+
         // New actions for recording
         case startRecording
         case startRecordingResponse(TaskResult<Void>)
@@ -147,7 +149,11 @@ public struct ComposeStore: Sendable {
             case .updateAudioEngineState(let newState):
                 state.audioEngineState = newState
                 return .none
-                
+
+            case .selectPadCount(let count):
+                state.selectedPadCount = count
+                return .none
+
             // New recording actions
             case .startRecording:
                 return .run { send in

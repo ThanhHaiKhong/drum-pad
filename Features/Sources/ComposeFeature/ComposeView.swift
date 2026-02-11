@@ -21,8 +21,45 @@ public struct ComposeView: View {
                     Spacer()
                 }
 
+                // Pad count selection controls
+                HStack {
+                    Text("Pads:")
+                        .font(.headline)
+
+                    Spacer()
+
+                    ForEach([8, 12, 16], id: \.self) { count in
+                        Button {
+                            store.send(.selectPadCount(count))
+                        } label: {
+                            Text("\(count)")
+                                .padding(.horizontal, 10)
+                                .padding(.vertical, 5)
+                                .background(
+                                    count == store.selectedPadCount
+                                        ? Color.blue
+                                        : Color.gray.opacity(0.2)
+                                )
+                                .foregroundColor(
+                                    count == store.selectedPadCount
+                                        ? Color.white
+                                        : Color.primary
+                                )
+                                .cornerRadius(8)
+                        }
+                        .buttonStyle(.borderless)
+                    }
+                }
+                .padding(.bottom, 10)
+
+                // Display only the selected number of pads
                 DrumPadGridView(
-                    pads: store.audioEngineState.pads,
+                    pads: Dictionary(uniqueKeysWithValues: 
+                        store.audioEngineState.pads
+                            .sorted { $0.key < $1.key }
+                            .prefix(store.selectedPadCount)
+                            .map { ($0.key, $0.value) }
+                    ),
                     samples: store.audioEngineState.samples,
                     hasRecordedSamples: [:],
                     isRecording: store.isRecording,
