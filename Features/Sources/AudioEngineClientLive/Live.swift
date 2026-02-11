@@ -26,6 +26,9 @@ extension AudioEngineClient: DependencyKey {
             drumPads: {
                 return await actor.drumPads()
             },
+            sampleDuration: { path in
+                return try await actor.sampleDuration(at: path)
+            },
             isPresetLoaded: {
                 return await actor.isPresetLoaded()
             },

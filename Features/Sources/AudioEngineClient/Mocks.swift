@@ -35,6 +35,7 @@ extension AudioEngineClient {
         stopAll: { },
         loadedSamples: { [:] },
         drumPads: { [:] },
+        sampleDuration: { _ in 1.0 },
         isPresetLoaded: { false },
         currentPresetId: { nil },
         startRecording: { },
@@ -62,6 +63,10 @@ extension AudioEngineClient {
         stopAll: { },
         loadedSamples: { [:] },
         drumPads: { [:] },
+        sampleDuration: { path in
+            try await Task.sleep(nanoseconds: MockConstants.playDelayNanoseconds)
+            throw URLError(.cannotDecodeContentData)
+        },
         isPresetLoaded: { false },
         currentPresetId: { nil },
         startRecording: {
@@ -126,6 +131,16 @@ extension AudioEngineClient {
                 )
             ]
         },
+        sampleDuration: { path in
+            // Return a mock duration based on the path
+            if path.contains("01") {
+                return 0.8 // Kick drum typically shorter
+            } else if path.contains("02") {
+                return 1.2 // Snare drum slightly longer
+            } else {
+                return 1.0 // Default duration
+            }
+        },
         isPresetLoaded: { true },
         currentPresetId: { "550" },
         startRecording: {
@@ -178,6 +193,10 @@ extension AudioEngineClient {
                 )
             }
             return pads
+        },
+        sampleDuration: { path in
+            // Generate a random duration between 0.5 and 2.0 seconds
+            return Double.random(in: 0.5...2.0)
         },
         isPresetLoaded: { true },
         currentPresetId: { "550" },

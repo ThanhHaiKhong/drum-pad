@@ -188,6 +188,29 @@ actor AudioEngineActor {
     }
 
 
+    func sampleDuration(at path: String) async throws -> Double {
+        logger("Getting duration for sample at path: \(path)")
+        
+        if path.isEmpty {
+            logger("Empty path detected, returning default duration")
+            return 1.0
+        }
+        
+        guard let sampleURL = URL(string: path) else {
+            throw AudioEngineClient.Error.sampleNotFound(path: path)
+        }
+        
+        guard let audioFile = try? AVAudioFile(forReading: sampleURL) else {
+            logger("Could not load audio file for duration calculation: \(path)")
+            throw AudioEngineClient.Error.sampleNotFound(path: path)
+        }
+        
+        let duration = Double(audioFile.length) / audioFile.processingFormat.sampleRate
+        logger("Duration for \(path) is \(duration) seconds")
+        
+        return duration
+    }
+    
     func isRecording() async -> Bool {
         return recordingStartTime != nil
     }

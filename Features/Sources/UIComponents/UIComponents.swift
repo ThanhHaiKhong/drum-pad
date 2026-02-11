@@ -1,14 +1,19 @@
 import SwiftUI
 import AudioEngineClient
+import Dependencies
 
 public struct DrumPadButton: View {
     let pad: AudioEngineClient.DrumPad
     let samples: [Int: AudioEngineClient.Sample]
     let hasRecordedSample: Bool
     let isRecording: Bool
+    @State private var isPlaying: Bool = false
+    @State private var progress: Double = 0.0
     let onTap: (Int) -> Void
     let onLongPress: (Int) -> Void
     let onRelease: () -> Void
+    
+    @Dependency(\.audioEngine) var audioEngine: AudioEngineClient
 
     public init(
         pad: AudioEngineClient.DrumPad,
@@ -32,21 +37,40 @@ public struct DrumPadButton: View {
         ZStack {
             Button {
                 onTap(pad.id)
+                startPlaybackAnimation()
             } label: {
-                RoundedRectangle(cornerRadius: 5)
-                    .fill(Color(hex: pad.color) ?? .gray)
-                    .opacity(0.8)
-                    .overlay {
-                        if let sample = samples[pad.sampleId] {
-                            Text(sample.name.prefix(2).uppercased())
-                                .foregroundColor(.white)
-                                .fontWeight(.bold)
-                                .minimumScaleFactor(0.5)
-                        }
+                ZStack {
+                    // Background rectangle with color
+                    RoundedRectangle(cornerRadius: 5)
+                        .fill(Color(hex: pad.color) ?? .gray)
+                        .opacity(0.8)
+                    
+                    // Overlay with sample name
+                    if let sample = samples[pad.sampleId] {
+                        Text(sample.name.prefix(2).uppercased())
+                            .foregroundColor(.white)
+                            .fontWeight(.bold)
+                            .minimumScaleFactor(0.5)
                     }
+                }
+                .overlay(
+                    // Progress ring around the button
+                    Circle()
+                        .trim(from: 0.0, to: isPlaying ? progress : 0.0)
+                        .stroke(
+                            AngularGradient(
+                                gradient: Gradient(colors: [.white, Color(hex: pad.color) ?? .gray]),
+                                center: .center
+                            ),
+                            style: StrokeStyle(lineWidth: 3, lineCap: .round, lineJoin: .round)
+                        )
+                        .rotationEffect(.degrees(-90))
+                        .frame(width: 44, height: 44)
+                        .offset(x: 0, y: 0)
+                )
             }
             .buttonStyle(DrumPadButtonStyle())
-            
+
             if hasRecordedSample {
                 Circle()
                     .stroke(Color.blue, lineWidth: 2)
@@ -73,6 +97,61 @@ public struct DrumPadButton: View {
                 }
             }
         )
+    }
+    
+    private func startPlaybackAnimation() {
+        isPlaying = true
+        progress = 0.0
+
+        // Get the sample associated with this pad
+        if let sample = samples[pad.sampleId] {
+            // Use the actual duration of the sample if available
+            Task {
+                do {
+                    let duration = try await audioEngine.sampleDuration(sample.path)
+                    
+                    // Animate the progress ring based on the sample's actual duration
+                    await MainActor.run {
+                        withAnimation(.linear(duration: duration)) {
+                            progress = 1.0
+                        }
+                        
+                        // Reset after animation completes
+                        DispatchQueue.main.asyncAfter(deadline: .now() + duration) {
+                            withAnimation {
+                                isPlaying = false
+                            }
+                        }
+                    }
+                } catch {
+                    // Fallback to default animation if duration retrieval fails
+                    let defaultDuration = 1.0
+                    await MainActor.run {
+                        withAnimation(.linear(duration: defaultDuration)) {
+                            progress = 1.0
+                        }
+                        
+                        DispatchQueue.main.asyncAfter(deadline: .now() + defaultDuration) {
+                            withAnimation {
+                                isPlaying = false
+                            }
+                        }
+                    }
+                }
+            }
+        } else {
+            // Fallback to default animation if sample is not found
+            let defaultDuration = 1.0
+            withAnimation(.linear(duration: defaultDuration)) {
+                progress = 1.0
+            }
+
+            DispatchQueue.main.asyncAfter(deadline: .now() + defaultDuration) {
+                withAnimation {
+                    isPlaying = false
+                }
+            }
+        }
     }
 }
 

@@ -14,6 +14,7 @@ public struct AudioEngineClient: Sendable {
     public var stopAll: @Sendable () async -> Void = { }
     public var loadedSamples: @Sendable () async -> [Int: AudioEngineClient.Sample] = { [:] }
     public var drumPads: @Sendable () async -> [Int: AudioEngineClient.DrumPad] = { [:] }
+    public var sampleDuration: @Sendable (_ path: String) async throws -> Double = { _ in 1.0 }
     public var isPresetLoaded: @Sendable () async -> Bool = { false }
     public var currentPresetId: @Sendable () async -> String? = { nil }
     public var startRecording: @Sendable () async throws -> Void = { }
