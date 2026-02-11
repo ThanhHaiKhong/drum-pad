@@ -30,10 +30,9 @@ public struct DrumPadButton: View {
 
     public var body: some View {
         ZStack {
-            // Main button
-            Button(action: {
+            Button {
                 onTap(pad.id)
-            }) {
+            } label: {
                 RoundedRectangle(cornerRadius: 5)
                     .fill(Color(hex: pad.color) ?? .gray)
                     .opacity(0.8)
@@ -48,14 +47,6 @@ public struct DrumPadButton: View {
             }
             .buttonStyle(DrumPadButtonStyle())
             
-            // Recording indicator overlay - show when recording globally
-            if isRecording {
-                Circle()
-                    .stroke(Color.red, lineWidth: 4)
-                    .frame(width: 60, height: 60)
-            }
-            
-            // Visual indicator for recorded sample
             if hasRecordedSample {
                 Circle()
                     .stroke(Color.blue, lineWidth: 2)
@@ -133,14 +124,13 @@ public struct DrumPadGridView: View {
                     pad: pad,
                     samples: samples,
                     hasRecordedSample: hasRecordedSamples[pad.id] ?? false,
-                    isRecording: isRecording, // Show recording state globally
+                    isRecording: isRecording,
                     onTap: onPadTap,
                     onLongPress: onPadLongPress,
                     onRelease: onPadRelease
                 )
             }
         }
-        .padding()
     }
 }
 

@@ -70,12 +70,16 @@ drum-pad/
 The project uses Tuist for project generation. The `project.yml` file defines the project structure and can be used with Tuist commands to regenerate the Xcode project if needed.
 
 ### Build Verification
+⚠️ IMPORTANT: ALWAYS use the `swift-build` script (with dash) to build the project or any target, NOT the default `swift build` command.
+The script is located at `/Users/thanhhaikhong/.config/bin/swift-build` and provides enhanced building capabilities for this project.
 Use the `swift-build` script to verify builds for specific targets:
-- `swift-build --target AudioEngineClient` - Build the audio engine client interface
-- `swift-build --target AudioEngineClientLive` - Build the live implementation
-- `swift-build --target UIComponents` - Build UI components
-- `swift-build --target AppFeature` - Build the main application feature
+- `swift-build --product AudioEngineClient` - Build the audio engine client interface
+- `swift-build --product AudioEngineClientLive` - Build the live implementation
+- `swift-build --product UIComponents` - Build UI components
+- `swift-build --product AppFeature` - Build the main application feature
 - `swift-build` - Build the entire project
+
+Note: The script automatically detects the project type (Xcode or SPM) and applies appropriate build settings.
 
 ## Development Conventions
 

@@ -14,58 +14,20 @@ public struct ComposeView: View {
         ScrollView(showsIndicators: false) {
             VStack {
                 HStack {
-                    Text("Drum Pad Composer")
+                    Text("Composer")
                         .font(.title)
                         .fontWeight(.bold)
 
                     Spacer()
-
-                    Picker("Preset", selection: Binding(
-                        get: { store.selectedPreset },
-                        set: { preset in store.send(.loadPreset(preset)) }
-                    )) {
-                        Text("Select Preset").tag("")
-                        Text("550").tag("550")
-                        Text("Custom").tag("custom")
-                    }
-                    .pickerStyle(MenuPickerStyle())
                 }
 
-                HStack {
-                    Text("Current Preset: \(store.selectedPreset.isEmpty ? "None" : store.selectedPreset)")
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
-
-                    Spacer()
-
-                    Text("\(store.audioEngineState.loadedSamplesCount)/\(store.audioEngineState.totalSamplesCount) Samples Loaded")
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
-                }
-                .padding(.vertical)
-
-                // Recording indicator
-                if store.isRecording {
-                    HStack {
-                        Circle()
-                            .fill(Color.red)
-                            .frame(width: 12, height: 12)
-                        Text("Recording...")
-                            .font(.caption)
-                            .foregroundColor(.red)
-                    }
-                    .padding(.bottom, 10)
-                }
-
-                // Drum pad grid (for playing sounds)
                 DrumPadGridView(
                     pads: store.audioEngineState.pads,
                     samples: store.audioEngineState.samples,
-                    hasRecordedSamples: [:], // Will need to update this when we have recorded samples in state
+                    hasRecordedSamples: [:],
                     isRecording: store.isRecording,
                     activeRecordingPadId: store.activeRecordingPadId,
                     onPadTap: { padId in
-                        // Play the pad regardless of recording state
                         store.send(.playPad(padId))
                     },
                     onPadLongPress: { _ in },
@@ -73,17 +35,6 @@ public struct ComposeView: View {
                 )
 
                 HStack {
-                    Button {
-                        store.send(.stopAll)
-                    } label: {
-                        Text("Stop All")
-                            .font(.headline)
-                    }
-                    .buttonStyle(.bordered)
-
-                    Spacer()
-
-                    // Record button to start/stop recording
                     Button {
                         if store.isRecording {
                             store.send(.stopRecording)
@@ -96,7 +47,8 @@ public struct ComposeView: View {
                                 .fill(store.isRecording ? Color.white : Color.red)
                                 .frame(width: 10, height: 10)
                                 .padding(5)
-                            Text(store.isRecording ? "Stop Recording" : "Start Recording")
+                            
+                            Text(store.isRecording ? "Stop" : "Record")
                         }
                         .padding(.horizontal, 10)
                         .padding(.vertical, 5)
@@ -106,7 +58,8 @@ public struct ComposeView: View {
                     }
                     .buttonStyle(.borderless)
                     
-                    // Play recorded audio button
+                    Spacer()
+                    
                     Button {
                         store.send(.playRecordedAudio)
                     } label: {
@@ -122,18 +75,6 @@ public struct ComposeView: View {
                         .cornerRadius(8)
                     }
                     .buttonStyle(.borderless)
-
-                    Spacer()
-
-                    Button {
-                        if !store.selectedPreset.isEmpty && store.selectedPreset != "" {
-                            store.send(.loadPreset(store.selectedPreset))
-                        }
-                    } label: {
-                        Text("Load Preset")
-                            .font(.headline)
-                    }
-                    .buttonStyle(.borderedProminent)
                 }
                 .padding(.vertical)
             }
