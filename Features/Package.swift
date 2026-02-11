@@ -13,6 +13,9 @@ let package = Package(
         .singleTargetLibrary("AudioEngineClient"),
         .singleTargetLibrary("AudioEngineClientLive"),
         .singleTargetLibrary("ComposeFeature"),
+        .singleTargetLibrary("DiscoverFeature"),
+        .singleTargetLibrary("LibraryFeature"),
+        .singleTargetLibrary("SettingsFeature"),
     ],
     dependencies: [
         .package(
@@ -33,7 +36,10 @@ let package = Package(
                 "AudioKit",
                 "AudioEngineClient",
                 "AudioEngineClientLive",
-                "ComposeFeature"
+                "ComposeFeature",
+                "DiscoverFeature",
+                "LibraryFeature",
+                "SettingsFeature"
             ]
         ),
         .target(
@@ -78,13 +84,24 @@ let package = Package(
                 "UIComponents"
             ]
         ),
-        .testTarget(
-            name: "AudioEngineClientTest",
+        .target(
+            name: "DiscoverFeature",
             dependencies: [
-                "AudioEngineClientLive",
-                "AudioEngineClient"
+                .product(name: "ComposableArchitecture", package: "swift-composable-architecture"),
             ]
-        )
+        ),
+        .target(
+            name: "LibraryFeature",
+            dependencies: [
+                .product(name: "ComposableArchitecture", package: "swift-composable-architecture"),
+            ]
+        ),
+        .target(
+            name: "SettingsFeature",
+            dependencies: [
+                .product(name: "ComposableArchitecture", package: "swift-composable-architecture"),
+            ]
+        ),
     ]
 )
 

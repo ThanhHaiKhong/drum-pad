@@ -12,7 +12,7 @@ public struct AppView: View {
     public var body: some View {
         NavigationStack {
             ComposeView(
-                store: store.scope(state: \.composeState, action: \.compose)
+                store: store.scope(state: \.compose, action: \.compose)
             )
             .onAppear {
                 store.send(.onAppear)
