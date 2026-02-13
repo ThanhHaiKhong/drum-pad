@@ -392,7 +392,7 @@ final class AudioEngineDelegate: @unchecked Sendable {
         }
         
         // Store the task for potential cancellation later
-        chokeGroupRemovalTasks[padId] = task as! Task<(), any Error>
+        chokeGroupRemovalTasks[padId] = task 
     }
 
     private func playSampleThroughRecordingEngine(at path: String, atTime time: TimeInterval) async throws {

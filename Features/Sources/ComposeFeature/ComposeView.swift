@@ -12,7 +12,7 @@ public struct ComposeView: View {
 
     public var body: some View {
         VStack(spacing: 20) {
-            DrumPadGridView(
+            DrumPadView(
                 pads: Dictionary(uniqueKeysWithValues:
                     store.audioEngineState.pads
                         .sorted { $0.key < $1.key }

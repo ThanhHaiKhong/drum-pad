@@ -1,5 +1,5 @@
 //
-//  DrumPadGridView.swift
+//  DrumPadView.swift
 //  Features
 //
 //  Created by Thanh Hai Khong on 11/2/26.
@@ -8,7 +8,7 @@
 import AudioEngineClient
 import SwiftUI
 
-public struct DrumPadGridView: View {
+public struct DrumPadView: View {
     let pads: [Int: AudioEngineClient.DrumPad]
     let samples: [Int: AudioEngineClient.Sample]
     let hasRecordedSamples: [Int: Bool] // Dictionary indicating which pads have recorded samples
@@ -41,7 +41,7 @@ public struct DrumPadGridView: View {
     public var body: some View {
         LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 10), count: 4), spacing: 10) {
             ForEach(Array(pads.sorted(by: { $0.key < $1.key }).map { $0.value }), id: \.id) { pad in
-                DrumPadButton(
+                DrumPadItemView(
                     pad: pad,
                     samples: samples,
                     hasRecordedSample: hasRecordedSamples[pad.id] ?? false,
