@@ -11,124 +11,128 @@ public struct ComposeView: View {
     }
 
     public var body: some View {
-        ScrollView(showsIndicators: false) {
-            VStack(spacing: 20) {
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack {
-                        ForEach(ComposeStore.State.Tab.allCases) { tab in
-                            Button {
-                                
-                            } label: {
-                                Text(tab.rawValue)
-                                    .font(.title3)
-                                    .fontWeight(.bold)
-                                    .foregroundStyle(store.selectedTab == tab ? .primary : .secondary)
-                            }
-                            .buttonStyle(.plain)
-                        }
-                    }
-                }
+        VStack(spacing: 20) {
+            DrumPadGridView(
+                pads: Dictionary(uniqueKeysWithValues:
+                    store.audioEngineState.pads
+                        .sorted { $0.key < $1.key }
+                        .prefix(store.selectedPadCount)
+                        .map { ($0.key, $0.value) }
+                ),
+                samples: store.audioEngineState.samples,
+                hasRecordedSamples: [:],
+                isRecording: store.isRecording,
+                activeRecordingPadId: store.activeRecordingPadId,
+                onPadTap: { padId in
+                    store.send(.playPad(padId))
+                },
+                onPadLongPress: { _ in },
+                onPadRelease: { }
+            )
+        }
+        .fontDesign(.monospaced)
+        .padding()
+        .onAppear {
+            store.send(.onAppear)
+        }
+    }
+}
 
-                // Pad count selection controls
-                HStack {
-                    Text("Pads:")
-                        .font(.headline)
-
-                    Spacer()
-
-                    ForEach([8, 12, 16], id: \.self) { count in
-                        Button {
-                            store.send(.selectPadCount(count))
-                        } label: {
-                            Text("\(count)")
-                                .font(.headline)
-                                .frame(width: 40, height: 34)
-                                .background(
-                                    count == store.selectedPadCount
-                                        ? Color.blue
-                                        : Color.gray.opacity(0.2)
-                                )
-                                .foregroundColor(
-                                    count == store.selectedPadCount
-                                        ? Color.white
-                                        : Color.primary
-                                )
-                                .cornerRadius(8)
-                        }
-                        .buttonStyle(.borderless)
-                    }
-                }
-                .padding(.bottom, 10)
-
-                // Display only the selected number of pads
-                DrumPadGridView(
-                    pads: Dictionary(uniqueKeysWithValues: 
-                        store.audioEngineState.pads
-                            .sorted { $0.key < $1.key }
-                            .prefix(store.selectedPadCount)
-                            .map { ($0.key, $0.value) }
-                    ),
-                    samples: store.audioEngineState.samples,
-                    hasRecordedSamples: [:],
-                    isRecording: store.isRecording,
-                    activeRecordingPadId: store.activeRecordingPadId,
-                    onPadTap: { padId in
-                        store.send(.playPad(padId))
-                    },
-                    onPadLongPress: { _ in },
-                    onPadRelease: { }
-                )
-
-                HStack {
+extension ComposeView {
+    public var headerView: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack {
+                ForEach(ComposeStore.State.Tab.allCases) { tab in
                     Button {
-                        if store.isRecording {
-                            store.send(.stopRecording)
-                        } else {
-                            store.send(.startRecording)
-                        }
+                        
                     } label: {
-                        HStack {
-                            Circle()
-                                .fill(store.isRecording ? Color.white : Color.red)
-                                .frame(width: 10, height: 10)
-                                .padding(5)
-                            
-                            Text(store.isRecording ? "Stop" : "Record")
-                        }
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 5)
-                        .background(store.isRecording ? Color.red : Color.gray.opacity(0.2))
-                        .foregroundColor(store.isRecording ? Color.white : Color.primary)
-                        .cornerRadius(8)
+                        Text(tab.rawValue)
+                            .font(.title3)
+                            .fontWeight(.bold)
+                            .foregroundStyle(store.selectedTab == tab ? .primary : .secondary)
                     }
-                    .buttonStyle(.borderless)
-                    
-                    Spacer()
-                    
-                    Button {
-                        store.send(.playRecordedAudio)
-                    } label: {
-                        HStack {
-                            Image(systemName: "play.circle.fill")
-                                .foregroundColor(.blue)
-                            Text("Play Recorded")
-                        }
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 5)
-                        .background(Color.gray.opacity(0.2))
-                        .foregroundColor(Color.primary)
-                        .cornerRadius(8)
-                    }
-                    .buttonStyle(.borderless)
+                    .buttonStyle(.plain)
                 }
-                .padding(.vertical)
-            }
-            .fontDesign(.monospaced)
-            .padding()
-            .onAppear {
-                store.send(.onAppear)
             }
         }
+    }
+    
+    public var padSelection: some View {
+        HStack {
+            Text("Pads:")
+                .font(.headline)
+
+            Spacer()
+
+            ForEach([8, 12, 16], id: \.self) { count in
+                Button {
+                    store.send(.selectPadCount(count))
+                } label: {
+                    Text("\(count)")
+                        .font(.headline)
+                        .frame(width: 40, height: 34)
+                        .background(
+                            count == store.selectedPadCount
+                                ? Color.blue
+                                : Color.gray.opacity(0.2)
+                        )
+                        .foregroundColor(
+                            count == store.selectedPadCount
+                                ? Color.white
+                                : Color.primary
+                        )
+                        .cornerRadius(8)
+                }
+                .buttonStyle(.borderless)
+            }
+        }
+        .padding(.bottom, 10)
+    }
+    
+    public var recordSection: some View {
+        HStack {
+            Button {
+                if store.isRecording {
+                    store.send(.stopRecording)
+                } else {
+                    store.send(.startRecording)
+                }
+            } label: {
+                HStack {
+                    Circle()
+                        .fill(store.isRecording ? Color.white : Color.red)
+                        .frame(width: 10, height: 10)
+                        .padding(5)
+                    
+                    Text(store.isRecording ? "Stop" : "Record")
+                }
+                .padding(.horizontal, 10)
+                .padding(.vertical, 5)
+                .background(store.isRecording ? Color.red : Color.gray.opacity(0.2))
+                .foregroundColor(store.isRecording ? Color.white : Color.primary)
+                .cornerRadius(8)
+            }
+            .buttonStyle(.borderless)
+            
+            Spacer()
+            
+            Button {
+                store.send(.playRecordedAudio)
+            } label: {
+                HStack {
+                    Image(systemName: "play.circle.fill")
+                        .foregroundColor(.blue)
+                    Text("Play Recorded")
+                }
+                .padding(.horizontal, 10)
+                .padding(.vertical, 5)
+                .background(Color.gray.opacity(0.2))
+                .foregroundColor(Color.primary)
+                .cornerRadius(8)
+            }
+            .buttonStyle(.borderless)
+        }
+        .padding(.vertical)
     }
 }
 

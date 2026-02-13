@@ -9,7 +9,7 @@ public struct ComposeStore: Sendable {
         public var audioEngineState: AudioEngineClient.State = .init()
         public var selectedPreset: String = ""
         public var isPlaying: Bool = false
-        public var selectedPadCount: Int = 8
+        public var selectedPadCount: Int = 16
         public var isRecording: Bool = false
         public var activeRecordingPadId: Int? = nil
         public var selectedTab: State.Tab = .composer

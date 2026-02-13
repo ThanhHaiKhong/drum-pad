@@ -3,7 +3,7 @@ import AudioKit
 import Foundation
 import AVFoundation
 
-// Extension to convert integers to little endian bytes
+// Extensions to convert integers to little endian bytes
 extension UInt32 {
     var bytes: Data {
         var value = self.littleEndian
@@ -18,7 +18,7 @@ extension UInt16 {
     }
 }
 
-// Structure to hold pad event information
+// Event structure for recording
 struct PadEvent {
     let time: TimeInterval
     let sampleURL: URL
@@ -27,27 +27,31 @@ struct PadEvent {
 
 final class AudioEngineDelegate: @unchecked Sendable {
     private let logger: @Sendable (String) -> Void
-    
-    // Audio engine properties
+
     private var engine: AudioEngine
     private var players: [String: AudioPlayer] = [:]
-    
-    // Preset and sample data
+    // Track which pad is associated with each player
+    private var padIdsByPlayerId: [String: Int] = [:]
+
     private var samples: [Int: AudioEngineClient.Sample] = [:]
     private var pads: [Int: AudioEngineClient.DrumPad] = [:]
     private var currentPreset: String?
-    
-    // Recording properties for pad-only recording
+
+    // Track currently playing pads by choke group
+    private var playingPadsByChokeGroup: [Int: Set<Int>] = [:]
+    // Track tasks that remove pads from choke groups after playback
+    private var chokeGroupRemovalTasks: [Int: Task<(), any Error>] = [:]
+
+    // Recording properties
     private var recordingStartTime: Date?
     private var recordingFilePath: String?
     private var lastRecordedFilePath: String?
     private var isRecordingOnlyPadSounds: Bool = false
-    private var recordedEvents: [PadEvent] = []  // Store events for manual rendering
+    private var recordedEvents: [PadEvent] = []
     private var recordingStartTimeOffset: TimeInterval = 0
-    
-    // Properties for recording
-    private var audioPlayerNodes: [URL: AVAudioPlayerNode] = [:] // Cache player nodes for samples
-    private var audioFiles: [URL: AVAudioFile] = [:] // Cache audio files
+
+    private var audioPlayerNodes: [URL: AVAudioPlayerNode] = [:]
+    private var audioFiles: [URL: AVAudioFile] = [:]
 
     init(
         logger: @escaping @Sendable (String) -> Void = { message in
@@ -57,10 +61,9 @@ final class AudioEngineDelegate: @unchecked Sendable {
         }
     ) {
         self.logger = logger
-        
-        // Initialize audio engine
+
         self.engine = AudioEngine()
-        
+
         let mixer = Mixer()
         engine.output = mixer
 
@@ -71,9 +74,9 @@ final class AudioEngineDelegate: @unchecked Sendable {
             logger("Audio engine failed to start: \(error)")
         }
     }
-    
+
     // MARK: - Public Methods
-    
+
     func loadPreset(presetId: String) async throws {
         logger("Loading preset: \(presetId)")
 
@@ -150,20 +153,36 @@ final class AudioEngineDelegate: @unchecked Sendable {
 
         logger("Playing original sample for pad: \(padId)")
 
-        // If we're recording pad sounds only, add this event to the recorded events
+        // Handle choke group behavior - stop any currently playing pads in the same choke group
+        if pad.chokeGroup != 0 { // Only apply choking if not in group 0 (which means no choking)
+            await stopPadsInChokeGroup(pad.chokeGroup)
+        }
+        
+        // Track this pad as currently playing in its choke group
+        if pad.chokeGroup != 0 {
+            if playingPadsByChokeGroup[pad.chokeGroup] == nil {
+                playingPadsByChokeGroup[pad.chokeGroup] = Set<Int>()
+            }
+            playingPadsByChokeGroup[pad.chokeGroup]?.insert(padId)
+        }
+
         if isRecordingOnlyPadSounds, let sampleURL = URL(string: sample.path) {
             let event = PadEvent(
                 time: CACurrentMediaTime() - recordingStartTimeOffset,
                 sampleURL: sampleURL,
-                velocity: 1.0  // Default velocity
+                velocity: 1.0
             )
             recordedEvents.append(event)
             logger("Added pad event to recording: \(padId)")
 
-            // Actually trigger the sound to be played through the recording-enabled engine
             try await playSampleThroughRecordingEngine(at: sample.path, atTime: event.time)
         } else {
+            // Track the relationship between pad and player
+            padIdsByPlayerId[sample.path] = padId
             try await playSample(at: sample.path)
+            
+            // Schedule removal of this pad from its choke group after the sample duration
+            await scheduleChokeGroupRemoval(for: padId, samplePath: sample.path, chokeGroup: pad.chokeGroup)
         }
     }
 
@@ -174,6 +193,16 @@ final class AudioEngineDelegate: @unchecked Sendable {
             player.stop()
         }
         players.removeAll()
+        padIdsByPlayerId.removeAll()
+        
+        // Cancel all scheduled choke group removal tasks
+        for task in chokeGroupRemovalTasks.values {
+            task.cancel()
+        }
+        chokeGroupRemovalTasks.removeAll()
+        
+        // Clear all choke group tracking
+        playingPadsByChokeGroup.removeAll()
     }
 
     func loadedSamples() async -> [Int: AudioEngineClient.Sample] {
@@ -235,14 +264,12 @@ final class AudioEngineDelegate: @unchecked Sendable {
         let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
         let filePath = documentsPath.appendingPathComponent(fileName).path
 
-        // Initialize the recording process
         recordingFilePath = filePath
         recordingStartTime = Date()
         recordingStartTimeOffset = CACurrentMediaTime()
         isRecordingOnlyPadSounds = true
-        recordedEvents = []  // Clear any previous events
+        recordedEvents = []
 
-        // Setup AVAudioEngine for recording
         setupAVAudioEngineForRecording(outputPath: filePath)
 
         logger("Pad-only recording started successfully at path: \(filePath)")
@@ -261,7 +288,6 @@ final class AudioEngineDelegate: @unchecked Sendable {
             return nil
         }
 
-        // Perform manual rendering to create the final recording with all the captured events
         try await performManualRendering(to: URL(fileURLWithPath: filePath))
 
         lastRecordedFilePath = filePath
@@ -269,10 +295,18 @@ final class AudioEngineDelegate: @unchecked Sendable {
         let returnedPath = recordingFilePath
         self.recordingFilePath = nil
         self.recordingStartTime = nil
-        self.isRecordingOnlyPadSounds = false  // Reset the pad-only recording flag
-        self.recordedEvents.removeAll()  // Clear the recorded events
-        self.audioPlayerNodes.removeAll() // Clear player nodes cache
-        self.audioFiles.removeAll() // Clear audio files cache
+        self.isRecordingOnlyPadSounds = false
+        self.recordedEvents.removeAll()
+        self.audioPlayerNodes.removeAll()
+        self.audioFiles.removeAll()
+        self.playingPadsByChokeGroup.removeAll() // Clear choke group tracking
+        self.padIdsByPlayerId.removeAll() // Clear pad-player tracking
+        
+        // Cancel all scheduled choke group removal tasks
+        for task in chokeGroupRemovalTasks.values {
+            task.cancel()
+        }
+        self.chokeGroupRemovalTasks.removeAll()
 
         logger("Pad-only recording stopped successfully, saved to: \(returnedPath ?? "unknown")")
         return returnedPath
@@ -289,21 +323,78 @@ final class AudioEngineDelegate: @unchecked Sendable {
     }
 
     // MARK: - Private Helper Methods
-    
+
     private func setupAVAudioEngineForRecording(outputPath: String) {
         logger("Initializing recording state to: \(outputPath)")
-        // We just need to initialize the recording state
-        // Actual rendering will happen when stopRecording is called
     }
 
-    // Finalize recording state
     private func stopAVAudioEngineRecording() {
         logger("Finalizing recording state")
-        // At this point, all events have been recorded in recordedEvents
-        // The actual rendering happens in performManualRendering
     }
 
-    // Add a new method to play samples through the recording engine
+    // Stop all pads in a specific choke group
+    private func stopPadsInChokeGroup(_ chokeGroup: Int) async {
+        guard let padsInGroup = playingPadsByChokeGroup[chokeGroup] else { return }
+        
+        for padId in padsInGroup {
+            // Stop the sample associated with this pad
+            if let pad = pads[padId], let sample = samples[pad.sampleId] {
+                let playerId = sample.path
+                if let player = players[playerId] {
+                    player.stop()
+                    
+                    // Remove the pad-player tracking
+                    padIdsByPlayerId.removeValue(forKey: playerId)
+                }
+                
+                // Cancel any scheduled removal task for this pad
+                if let removalTask = chokeGroupRemovalTasks[padId] {
+                    removalTask.cancel()
+                    chokeGroupRemovalTasks.removeValue(forKey: padId)
+                }
+            }
+        }
+        
+        // Clear the tracking for this choke group
+        playingPadsByChokeGroup[chokeGroup]?.removeAll()
+    }
+    
+    // Schedule removal of a pad from its choke group after playback
+    private func scheduleChokeGroupRemoval(for padId: Int, samplePath: String, chokeGroup: Int) async {
+        // Cancel any existing task for this pad
+        if let existingTask = chokeGroupRemovalTasks[padId] {
+            existingTask.cancel()
+        }
+        
+        // Get the sample duration to determine when to remove the pad from the choke group
+        let duration: Double
+        do {
+            duration = try await sampleDuration(at: samplePath)
+        } catch {
+            // Default to 1 second if we can't get the duration
+            duration = 1.0
+        }
+        
+        // Create a new task to remove the pad from its choke group after the duration
+        let task = Task {
+            // Wait for the duration of the sample
+            try? await Task.sleep(nanoseconds: UInt64(duration * 1_000_000_000))
+            
+            // Only proceed if the task hasn't been cancelled
+            try Task.checkCancellation()
+            
+            // Remove the pad from its choke group
+            await MainActor.run {
+                self.playingPadsByChokeGroup[chokeGroup]?.remove(padId)
+                self.padIdsByPlayerId.removeValue(forKey: samplePath)
+                self.chokeGroupRemovalTasks.removeValue(forKey: padId)
+            }
+        }
+        
+        // Store the task for potential cancellation later
+        chokeGroupRemovalTasks[padId] = task as! Task<(), any Error>
+    }
+
     private func playSampleThroughRecordingEngine(at path: String, atTime time: TimeInterval) async throws {
         logger("Playing sample through recording engine at path: \(path)")
 
@@ -317,25 +408,20 @@ final class AudioEngineDelegate: @unchecked Sendable {
             throw AudioEngineClient.Error.sampleNotFound(path: path)
         }
 
-        // Just play the sample normally - the event is already captured in playPad
         try await playSample(at: path)
     }
 
-    // Perform manual rendering to create the final recording file
     private func performManualRendering(to outputURL: URL) async throws {
         logger("Performing manual rendering to: \(outputURL.path)")
 
-        // If no events were recorded, create a minimal silent file
         guard !recordedEvents.isEmpty else {
             logger("No events recorded, creating a minimal silent file")
             try createSilentFile(at: outputURL)
             return
         }
 
-        // Calculate the total duration based on the last recorded event plus the longest sample duration
         var totalDuration = recordedEvents.last?.time ?? 0.0
 
-        // Find the maximum duration among all samples to ensure we account for the full length
         for event in recordedEvents {
             guard let audioFile = try? AVAudioFile(forReading: event.sampleURL) else {
                 logger("Could not load audio file: \(event.sampleURL.path)")
@@ -348,23 +434,18 @@ final class AudioEngineDelegate: @unchecked Sendable {
             }
         }
 
-        // Ensure minimum duration to prevent buffer creation issues
         if totalDuration < 0.1 {
             totalDuration = 0.1
         }
 
-        // Create a buffer to hold the mixed audio
         let sampleRate: Double = 44100.0
-        let channels: AVAudioChannelCount = 2 // Stereo
+        let channels: AVAudioChannelCount = 2
         let frameCount = AVAudioFrameCount(totalDuration * sampleRate)
 
-        // Create audio format
         let audioFormat = AVAudioFormat(standardFormatWithSampleRate: sampleRate, channels: channels)!
 
-        // Create a buffer to mix all audio
         let mixedBuffer = AVAudioPCMBuffer(pcmFormat: audioFormat, frameCapacity: frameCount)!
 
-        // Initialize the buffer with zeros
         if let channelData = mixedBuffer.floatChannelData {
             for i in 0 ..< Int(channels) {
                 memset(channelData[i], 0, Int(frameCount) * MemoryLayout<Float>.size)
@@ -372,38 +453,30 @@ final class AudioEngineDelegate: @unchecked Sendable {
         }
         mixedBuffer.frameLength = frameCount
 
-        // Process each recorded event
         for event in recordedEvents {
-            // Load the audio file for this event
             guard let audioFileToMix = try? AVAudioFile(forReading: event.sampleURL) else {
                 logger("Could not load audio file: \(event.sampleURL.path)")
                 continue
             }
 
-            // Create a buffer to hold this sample's audio data
             let sampleBuffer = AVAudioPCMBuffer(pcmFormat: audioFileToMix.processingFormat, frameCapacity: AVAudioFrameCount(audioFileToMix.length))!
 
-            // Read the sample data
             try audioFileToMix.read(into: sampleBuffer)
 
-            // Mix this sample into the main buffer at the appropriate time
             mixSampleIntoBuffer(sampleBuffer, at: event.time, into: mixedBuffer, sampleRate: sampleRate)
         }
 
-        // Create audio file for writing with the calculated settings
         let audioFile = try AVAudioFile(forWriting: outputURL, settings: audioFormat.settings)
 
-        // Write the mixed buffer to the output file
         try audioFile.write(from: mixedBuffer)
 
         logger("Manual rendering completed with actual audio data")
     }
 
-    // Helper function to create a silent file when no events are recorded
     private func createSilentFile(at url: URL) throws {
         let sampleRate: Double = 44100.0
         let channels: AVAudioChannelCount = 2
-        let duration: Double = 1.0 // 1 second of silence
+        let duration: Double = 1.0
         let frameCount = AVAudioFrameCount(duration * sampleRate)
 
         let audioFormat = AVAudioFormat(standardFormatWithSampleRate: sampleRate, channels: channels)!
@@ -411,7 +484,6 @@ final class AudioEngineDelegate: @unchecked Sendable {
 
         let silentBuffer = AVAudioPCMBuffer(pcmFormat: audioFormat, frameCapacity: frameCount)!
 
-        // Initialize with zeros
         if let channelData = silentBuffer.floatChannelData {
             for i in 0 ..< Int(channels) {
                 memset(channelData[i], 0, Int(frameCount) * MemoryLayout<Float>.size)
@@ -422,7 +494,6 @@ final class AudioEngineDelegate: @unchecked Sendable {
         try audioFile.write(from: silentBuffer)
     }
 
-    // Helper function to mix a sample into the main buffer at a specific time
     private func mixSampleIntoBuffer(_ sampleBuffer: AVAudioPCMBuffer, at startTime: TimeInterval, into mixedBuffer: AVAudioPCMBuffer, sampleRate: Double) {
         guard let sampleData = sampleBuffer.floatChannelData,
               let mixedData = mixedBuffer.floatChannelData else {
@@ -433,7 +504,6 @@ final class AudioEngineDelegate: @unchecked Sendable {
         let channels = Int(mixedBuffer.format.channelCount)
         let startFrame = AVAudioFramePosition(startTime * sampleRate)
 
-        // Make sure we don't exceed the bounds of the mixed buffer
         let sampleFrames = sampleBuffer.frameLength
         let endFrame = min(startFrame + AVAudioFramePosition(sampleFrames), AVAudioFramePosition(mixedBuffer.frameLength))
 
@@ -441,12 +511,10 @@ final class AudioEngineDelegate: @unchecked Sendable {
             let sourceChannel = sampleData[channel]
             let destChannel = mixedData[channel]
 
-            // Copy sample frames to the appropriate position in the mixed buffer
             for frame in 0..<(endFrame - startFrame) {
                 let sourceIndex = Int(frame)
                 let destIndex = Int(startFrame + frame)
 
-                // Simple addition for mixing (without clipping protection)
                 destChannel[destIndex] += sourceChannel[sourceIndex]
             }
         }
