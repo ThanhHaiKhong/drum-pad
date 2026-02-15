@@ -52,6 +52,9 @@ final class AudioEngineDelegate: @unchecked Sendable {
 
     private var audioPlayerNodes: [URL: AVAudioPlayerNode] = [:]
     private var audioFiles: [URL: AVAudioFile] = [:]
+    
+    // Progress tracking
+    private var playerProgressTrackers: [String: Timer] = [:]
 
     init(
         logger: @escaping @Sendable (String) -> Void = { message in
@@ -320,6 +323,37 @@ final class AudioEngineDelegate: @unchecked Sendable {
 
         logger("Playing recorded audio from path: \(recordedFilePath)")
         try await playSample(at: recordedFilePath)
+    }
+    
+    func currentPlayerTime(for path: String) async throws -> Double {
+        logger("Getting current player time for path: \(path)")
+        
+        guard let player = players[path] else {
+            logger("Player not found for path: \(path)")
+            throw AudioEngineClient.Error.playerNotInitialized(path: path)
+        }
+        
+        // Return the current playback time of the player
+        // AudioPlayer has a 'currentTime' property that gives us the current playback position
+        let currentTime = player.currentTime
+        
+        logger("Current time for \(path) is \(currentTime) seconds")
+        return currentTime
+    }
+    
+    func isPlaying(for path: String) async -> Bool {
+        logger("Checking if player is playing for path: \(path)")
+        
+        guard let player = players[path] else {
+            logger("Player not found for path: \(path), returning false")
+            return false
+        }
+        
+        // Check the status of the player
+        let isCurrentlyPlaying = player.isPlaying
+        
+        logger("Player for \(path) is playing: \(isCurrentlyPlaying)")
+        return isCurrentlyPlaying
     }
 
     // MARK: - Private Helper Methods

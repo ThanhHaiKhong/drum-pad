@@ -13,6 +13,7 @@ public struct ComposeStore: Sendable {
         public var isRecording: Bool = false
         public var activeRecordingPadId: Int? = nil
         public var selectedTab: State.Tab = .composer
+        public var drumPads: IdentifiedArrayOf<DrumPadStore.State> = []
 
         public init() {}
     }
@@ -21,8 +22,6 @@ public struct ComposeStore: Sendable {
         case onAppear
         case loadPreset(String)
         case loadPresetResponse(TaskResult<AudioEngineClient.State>)
-        case playPad(Int)
-        case playPadResponse(TaskResult<Void>)
         case stopAll
         case stopAllResponse
         case updateAudioEngineState(AudioEngineClient.State)
@@ -34,6 +33,7 @@ public struct ComposeStore: Sendable {
         case updateRecordingState(Bool, Int?)
         case playRecordedAudio
         case playRecordedAudioResponse(TaskResult<Void>)
+        case drumPads(IdentifiedActionOf<DrumPadStore>)
     }
 
     @Dependency(\.audioEngine) var audioEngine
@@ -52,15 +52,6 @@ public struct ComposeStore: Sendable {
                 
             case .loadPresetResponse(.failure(let error)):
                 return handleLoadPresetResponseFailure(error: error)
-                
-            case .playPad(let padId):
-                return handlePlayPad(padId: padId)
-                
-            case .playPadResponse(.success):
-                return handlePlayPadResponseSuccess(state: &state)
-                
-            case .playPadResponse(.failure(let error)):
-                return handlePlayPadResponseFailure(error: error)
                 
             case .stopAll:
                 return handleStopAll(state: &state)
@@ -103,7 +94,13 @@ public struct ComposeStore: Sendable {
                 
             case .playRecordedAudioResponse(.failure(let error)):
                 return handlePlayRecordedAudioResponseFailure(error: error)
+                
+            case .drumPads:
+                return .none
             }
+        }
+        .forEach(\.drumPads, action: \.drumPads) {
+            DrumPadStore()
         }
     }
     
@@ -170,26 +167,6 @@ public struct ComposeStore: Sendable {
         return .none
     }
     
-    private func handlePlayPad(padId: Int) -> Effect<Action> {
-        return .run { send in
-            let result = await TaskResult {
-                try await audioEngine.playPad(padId)
-            }
-
-            await send(.playPadResponse(result))
-        }
-    }
-    
-    private func handlePlayPadResponseSuccess(state: inout State) -> Effect<Action> {
-        state.isPlaying = true
-        return .none
-    }
-    
-    private func handlePlayPadResponseFailure(error: Error) -> Effect<Action> {
-        print("Failed to play pad: \(error)")
-        return .none
-    }
-    
     private func handleStopAll(state: inout State) -> Effect<Action> {
         let currentState = state.audioEngineState
         return .run { send in
@@ -214,6 +191,15 @@ public struct ComposeStore: Sendable {
     
     private func handleUpdateAudioEngineState(state: inout State, newState: AudioEngineClient.State) -> Effect<Action> {
         state.audioEngineState = newState
+        var drumPadStates: [DrumPadStore.State] = []
+        for sample in newState.samples {
+            for pad in newState.pads {
+                if pad.key == sample.key {
+                    drumPadStates.append(.init(sample: sample.value, pad: pad.value))
+                }
+            }
+        }
+        state.drumPads = IdentifiedArray(uniqueElements: drumPadStates)
         return .none
     }
     

@@ -1,5 +1,5 @@
 //
-//  DrumPadItemView.swift
+//  DrumPadItem.swift
 //  Features
 //
 //  Created by Thanh Hai Khong on 11/2/26.
@@ -9,36 +9,27 @@ import AudioEngineClient
 import Dependencies
 import SwiftUI
 
-public struct DrumPadItemView: View {
+public struct DrumPadItem: View {
     @State private var isPlaying: Bool = false
     @State private var progress: Double = 0.0
     
     let pad: AudioEngineClient.DrumPad
     let samples: [Int: AudioEngineClient.Sample]
-    let hasRecordedSample: Bool
     let isRecording: Bool
     let onTap: (Int) -> Void
-    let onLongPress: (Int) -> Void
-    let onRelease: () -> Void
     
     @Dependency(\.audioEngine) var audioEngine: AudioEngineClient
     
     public init(
         pad: AudioEngineClient.DrumPad,
         samples: [Int: AudioEngineClient.Sample],
-        hasRecordedSample: Bool,
         isRecording: Bool,
         onTap: @escaping (Int) -> Void,
-        onLongPress: @escaping (Int) -> Void,
-        onRelease: @escaping () -> Void
     ) {
         self.pad = pad
         self.samples = samples
-        self.hasRecordedSample = hasRecordedSample
         self.isRecording = isRecording
         self.onTap = onTap
-        self.onLongPress = onLongPress
-        self.onRelease = onRelease
     }
     
     public var body: some View {
@@ -129,33 +120,6 @@ public struct DrumPadItemView: View {
             withAnimation {
                 isPlaying = false
                 progress = 0.0
-            }
-        }
-    }
-}
-
-public struct DrumPadButtonStyle: ButtonStyle {
-    public func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .aspectRatio(1, contentMode: .fill)
-            .scaleEffect(configuration.isPressed ? 0.9 : 1.0)
-            .animation(.easeInOut(duration: 0.1), value: configuration.isPressed)
-    }
-}
-
-struct CustomProgressView: View {
-    let progress: CGFloat
-    
-    var body: some View {
-        GeometryReader { geometry in
-            ZStack(alignment: .leading) {
-                Rectangle()
-                    .frame(width: geometry.size.width, height: 4)
-                    .foregroundColor(.black.opacity(0.125))
-                
-                Rectangle()
-                    .frame(width: min(progress * geometry.size.width, geometry.size.width), height: 4)
-                    .foregroundColor(.white)
             }
         }
     }

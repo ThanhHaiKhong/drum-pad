@@ -5,52 +5,43 @@
 //  Created by Thanh Hai Khong on 11/2/26.
 //
 
-import AudioEngineClient
+import ComposableArchitecture
 import SwiftUI
 
 public struct DrumPadView: View {
-    let pads: [Int: AudioEngineClient.DrumPad]
-    let samples: [Int: AudioEngineClient.Sample]
-    let hasRecordedSamples: [Int: Bool] // Dictionary indicating which pads have recorded samples
-    let isRecording: Bool
-    let activeRecordingPadId: Int?
-    let onPadTap: (Int) -> Void
-    let onPadLongPress: (Int) -> Void
-    let onPadRelease: () -> Void
-
-    public init(
-        pads: [Int: AudioEngineClient.DrumPad],
-        samples: [Int: AudioEngineClient.Sample],
-        hasRecordedSamples: [Int: Bool],
-        isRecording: Bool,
-        activeRecordingPadId: Int?, // Still keeping this for potential future use
-        onPadTap: @escaping (Int) -> Void,
-        onPadLongPress: @escaping (Int) -> Void,
-        onPadRelease: @escaping () -> Void
-    ) {
-        self.pads = pads
-        self.samples = samples
-        self.hasRecordedSamples = hasRecordedSamples
-        self.isRecording = isRecording
-        self.activeRecordingPadId = activeRecordingPadId
-        self.onPadTap = onPadTap
-        self.onPadLongPress = onPadLongPress
-        self.onPadRelease = onPadRelease
+    private var store: StoreOf<DrumPadStore>
+    private var padColor: Color {
+        Color(hex: store.pad.color) ?? .gray
     }
-
+    
+    public init(
+        store: StoreOf<DrumPadStore>
+    ) {
+        self.store = store
+    }
+    
     public var body: some View {
-        LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 10), count: 4), spacing: 10) {
-            ForEach(Array(pads.sorted(by: { $0.key < $1.key }).map { $0.value }), id: \.id) { pad in
-                DrumPadItemView(
-                    pad: pad,
-                    samples: samples,
-                    hasRecordedSample: hasRecordedSamples[pad.id] ?? false,
-                    isRecording: isRecording,
-                    onTap: onPadTap,
-                    onLongPress: onPadLongPress,
-                    onRelease: onPadRelease
-                )
-            }
+        Button {
+            store.send(.playPad)
+        } label: {
+            Rectangle()
+                .fill(padColor)
+                .overlay(alignment: .top) {
+                    VStack(alignment: .leading) {
+                        CustomProgressView(progress: store.progress)
+                            .frame(height: 4)
+                            .opacity(store.isPlaying ? 1.0 : 0.0)
+                        
+                        Spacer()
+                        
+                        Text(store.sample.name.prefix(2).uppercased())
+                            .font(.headline)
+                            .fontWeight(.bold)
+                            .foregroundColor(.white)
+                    }
+                    .padding(10)
+                }
         }
+        .buttonStyle(.drumPad)
     }
 }

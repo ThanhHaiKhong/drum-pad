@@ -21,4 +21,8 @@ public struct AudioEngineClient: Sendable {
     public var stopRecording: @Sendable () async throws -> String? = { nil }
     public var isRecording: @Sendable () async -> Bool = { false }
     public var playRecordedAudio: @Sendable () async throws -> Void = { }
+    
+    // Playback progress tracking
+    public var currentPlayerTime: @Sendable (_ path: String) async throws -> Double = { _ in 0.0 }
+    public var isPlaying: @Sendable (_ path: String) async -> Bool = { _ in false }
 }

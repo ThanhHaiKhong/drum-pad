@@ -46,6 +46,12 @@ extension AudioEngineClient: DependencyKey {
             },
             playRecordedAudio: {
                 try await actor.playRecordedAudio()
+            },
+            currentPlayerTime: { path in
+                try await actor.currentPlayerTime(for: path)
+            },
+            isPlaying: { path in
+                await actor.isPlaying(for: path)
             }
         )
     }()

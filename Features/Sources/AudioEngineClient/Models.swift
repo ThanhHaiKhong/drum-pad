@@ -85,6 +85,7 @@ extension AudioEngineClient {
         case invalidPadId(Int)
         case startRecordingFailed(underlyingError: Swift.Error)
         case stopRecordingFailed(underlyingError: Swift.Error)
+        case playerNotInitialized(path: String)
 
         public var errorDescription: String? {
             switch self {
@@ -104,6 +105,8 @@ extension AudioEngineClient {
                 return "Failed to start recording: \(error.localizedDescription)"
             case .stopRecordingFailed(let error):
                 return "Failed to stop recording: \(error.localizedDescription)"
+            case .playerNotInitialized(let path):
+                return "Player not initialized for path: \(path)"
             }
         }
     }

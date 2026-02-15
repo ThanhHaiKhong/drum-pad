@@ -41,7 +41,9 @@ extension AudioEngineClient {
         startRecording: { },
         stopRecording: { nil },
         isRecording: { false },
-        playRecordedAudio: { }
+        playRecordedAudio: { },
+        currentPlayerTime: { _ in 0.0 },
+        isPlaying: { _ in false }
     )
 
     /// A failing implementation that throws errors for operations.
@@ -78,7 +80,12 @@ extension AudioEngineClient {
             throw URLError(.cannotOpenFile)
         },
         isRecording: { false },
-        playRecordedAudio: { }
+        playRecordedAudio: { },
+        currentPlayerTime: { path in
+            try await Task.sleep(nanoseconds: MockConstants.playDelayNanoseconds)
+            throw URLError(.cannotDecodeContentData)
+        },
+        isPlaying: { _ in false }
     )
 
     /// A successful implementation with mock audio operations.
@@ -152,7 +159,16 @@ extension AudioEngineClient {
             return "/mock/path/recording_\(Date().timeIntervalSince1970).caf"
         },
         isRecording: { true },
-        playRecordedAudio: { }
+        playRecordedAudio: { },
+        currentPlayerTime: { path in
+            // Simulate a progressing playback time
+            // For demo purposes, we'll return a value that increases over time
+            return Double.random(in: 0.0...1.0) // Random time between 0 and 1 second
+        },
+        isPlaying: { path in
+            // Simulate that the player is playing for demonstration
+            return Bool.random()
+        }
     )
 
     /// A mock that simulates a loaded preset with multiple samples
@@ -208,6 +224,14 @@ extension AudioEngineClient {
             return "/mock/path/recording_\(Date().timeIntervalSince1970).caf"
         },
         isRecording: { true },
-        playRecordedAudio: { }
+        playRecordedAudio: { },
+        currentPlayerTime: { path in
+            // Simulate a progressing playback time
+            return Double.random(in: 0.0...0.5) // Random time between 0 and 0.5 second
+        },
+        isPlaying: { path in
+            // Simulate that the player is playing
+            return true
+        }
     )
 }

@@ -4,34 +4,28 @@ import AudioEngineClient
 import UIComponents
 
 public struct ComposeView: View {
-    let store: StoreOf<ComposeStore>
+    private let store: StoreOf<ComposeStore>
+    private var columns: [GridItem] = Array(
+        repeating: GridItem(.flexible(), spacing: 10),
+        count: 4
+    )
 
-    public init(store: StoreOf<ComposeStore>) {
+    public init(
+        store: StoreOf<ComposeStore>
+    ) {
         self.store = store
     }
 
     public var body: some View {
         VStack(spacing: 20) {
-            DrumPadView(
-                pads: Dictionary(uniqueKeysWithValues:
-                    store.audioEngineState.pads
-                        .sorted { $0.key < $1.key }
-                        .prefix(store.selectedPadCount)
-                        .map { ($0.key, $0.value) }
-                ),
-                samples: store.audioEngineState.samples,
-                hasRecordedSamples: [:],
-                isRecording: store.isRecording,
-                activeRecordingPadId: store.activeRecordingPadId,
-                onPadTap: { padId in
-                    store.send(.playPad(padId))
-                },
-                onPadLongPress: { _ in },
-                onPadRelease: { }
-            )
+            LazyVGrid(columns: columns, spacing: 10) {
+                ForEach(store.scope(state: \.drumPads, action: \.drumPads)) { store in
+                    DrumPadView(store: store)
+                }
+            }
+            .padding(.horizontal)
         }
         .fontDesign(.monospaced)
-        .padding()
         .onAppear {
             store.send(.onAppear)
         }

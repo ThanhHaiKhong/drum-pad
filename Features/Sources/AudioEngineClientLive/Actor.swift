@@ -66,4 +66,12 @@ actor AudioEngineActor {
     func playRecordedAudio() async throws {
         try await delegate.playRecordedAudio()
     }
+    
+    func currentPlayerTime(for path: String) async throws -> Double {
+        return try await delegate.currentPlayerTime(for: path)
+    }
+    
+    func isPlaying(for path: String) async -> Bool {
+        return await delegate.isPlaying(for: path)
+    }
 }
