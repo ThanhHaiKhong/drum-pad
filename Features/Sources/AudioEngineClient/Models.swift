@@ -7,38 +7,6 @@ import Foundation
 import ComposableArchitecture
 
 extension AudioEngineClient {
-    public struct Sample: Codable, Identifiable, Equatable, Sendable {
-        public let id: Int
-        public let filename: String
-        public let name: String
-        public let path: String
-        public let color: String
-        public let chokeGroup: Int
-
-        public init(id: Int, filename: String, name: String, path: String, color: String, chokeGroup: Int) {
-            self.id = id
-            self.filename = filename
-            self.name = name
-            self.path = path
-            self.color = color
-            self.chokeGroup = chokeGroup
-        }
-    }
-
-    public struct DrumPad: Codable, Identifiable, Equatable, Sendable {
-        public let id: Int
-        public let sampleId: Int
-        public let color: String
-        public let chokeGroup: Int
-
-        public init(id: Int, sampleId: Int, color: String, chokeGroup: Int) {
-            self.id = id
-            self.sampleId = sampleId
-            self.color = color
-            self.chokeGroup = chokeGroup
-        }
-    }
-
     public struct PresetData: Codable, Sendable {
         public let id: String
         public let name: String
@@ -50,7 +18,9 @@ extension AudioEngineClient {
             self.files = files
         }
     }
+}
 
+extension AudioEngineClient.PresetData {
     public struct PresetFile: Codable, Sendable {
         public let id: String
         public let filename: String
@@ -64,18 +34,56 @@ extension AudioEngineClient {
             self.choke = choke
         }
     }
+}
 
+extension AudioEngineClient {
+    public struct DrumPad: Codable, Identifiable, Equatable, Sendable {
+        public let id: Int
+        public let sample: Sample
+        public let color: String
+        public let chokeGroup: Int
+
+        public init(id: Int, sample: Sample, color: String, chokeGroup: Int) {
+            self.id = id
+            self.sample = sample
+            self.color = color
+            self.chokeGroup = chokeGroup
+        }
+    }
+}
+
+extension AudioEngineClient.DrumPad {
+    public struct Sample: Codable, Identifiable, Equatable, Sendable {
+        public let id: Int
+        public let filename: String
+        public let name: String
+        public let path: String
+
+        public init(
+            id: Int,
+            filename: String,
+            name: String,
+            path: String
+        ) {
+            self.id = id
+            self.filename = filename
+            self.name = name
+            self.path = path
+        }
+    }
+}
+
+extension AudioEngineClient {
     public struct State: Codable, Equatable, Sendable {
-        public var samples: [Int: Sample] = [:]
-        public var pads: [Int: DrumPad] = [:]
-        public var isPlaying: Bool = false
         public var currentPreset: String = ""
-        public var loadedSamplesCount: Int = 0
-        public var totalSamplesCount: Int = 0
+        public var pads: [DrumPad] = []
+        public var isPlaying: Bool = false
 
         public init() {}
     }
+}
 
+extension AudioEngineClient {
     public enum `Error`: Swift.Error, Sendable, LocalizedError {
         case loadPresetFailed(presetId: String, underlyingError: Swift.Error)
         case playSampleFailed(path: String, underlyingError: Swift.Error)

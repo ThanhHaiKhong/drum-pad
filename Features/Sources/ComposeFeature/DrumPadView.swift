@@ -34,7 +34,7 @@ public struct DrumPadView: View {
                         
                         Spacer()
                         
-                        Text(store.sample.name.prefix(2).uppercased())
+                        Text(store.pad.sample.name.prefix(2).uppercased())
                             .font(.headline)
                             .fontWeight(.bold)
                             .foregroundColor(.white)

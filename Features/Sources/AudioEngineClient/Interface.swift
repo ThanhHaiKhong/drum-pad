@@ -9,20 +9,12 @@ import Foundation
 @DependencyClient
 public struct AudioEngineClient: Sendable {
     public var loadPreset: @Sendable (_ presetId: String) async throws -> Void = { _ in }
-    public var playSample: @Sendable (_ path: String) async throws -> Void = { _ in }
-    public var playPad: @Sendable (_ padId: Int) async throws -> Void = { _ in }
-    public var stopAll: @Sendable () async -> Void = { }
-    public var loadedSamples: @Sendable () async -> [Int: AudioEngineClient.Sample] = { [:] }
-    public var drumPads: @Sendable () async -> [Int: AudioEngineClient.DrumPad] = { [:] }
-    public var sampleDuration: @Sendable (_ path: String) async throws -> Double = { _ in 1.0 }
-    public var isPresetLoaded: @Sendable () async -> Bool = { false }
-    public var currentPresetId: @Sendable () async -> String? = { nil }
+    public var playPad: @Sendable (_ padID: AudioEngineClient.DrumPad.ID) async throws -> Void = { _ in }
+    public var drumPads: @Sendable () async -> [AudioEngineClient.DrumPad] = { [] }
+    public var currentPresetID: @Sendable () async -> String? = { nil }
     public var startRecording: @Sendable () async throws -> Void = { }
     public var stopRecording: @Sendable () async throws -> String? = { nil }
     public var isRecording: @Sendable () async -> Bool = { false }
     public var playRecordedAudio: @Sendable () async throws -> Void = { }
-    
-    // Playback progress tracking
-    public var currentPlayerTime: @Sendable (_ path: String) async throws -> Double = { _ in 0.0 }
-    public var isPlaying: @Sendable (_ path: String) async -> Bool = { _ in false }
+    public var currentProgress: @Sendable (_ padID: AudioEngineClient.DrumPad.ID) async throws -> Double = { _ in 0.0 }
 }

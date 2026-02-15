@@ -8,32 +8,17 @@ extension AudioEngineClient: DependencyKey {
         let actor = AudioEngineActor()
 
         return AudioEngineClient(
-            loadPreset: { presetId in
-                try await actor.loadPreset(presetId: presetId)
+            loadPreset: { presetID in
+                try await actor.loadPreset(presetID)
             },
-            playSample: { path in
-                try await actor.playSample(at: path)
-            },
-            playPad: { padId in
-                try await actor.playPad(padId: padId)
-            },
-            stopAll: {
-                await actor.stopAll()
-            },
-            loadedSamples: {
-                return await actor.loadedSamples()
+            playPad: { padID in
+                try await actor.playPad(padID)
             },
             drumPads: {
                 return await actor.drumPads()
             },
-            sampleDuration: { path in
-                return try await actor.sampleDuration(at: path)
-            },
-            isPresetLoaded: {
-                return await actor.isPresetLoaded()
-            },
-            currentPresetId: {
-                return await actor.currentPresetId()
+            currentPresetID: {
+                return await actor.currentPresetID()
             },
             startRecording: {
                 try await actor.startRecording()
@@ -47,11 +32,8 @@ extension AudioEngineClient: DependencyKey {
             playRecordedAudio: {
                 try await actor.playRecordedAudio()
             },
-            currentPlayerTime: { path in
-                try await actor.currentPlayerTime(for: path)
-            },
-            isPlaying: { path in
-                await actor.isPlaying(for: path)
+            currentProgress: { padID in
+                return 0.0
             }
         )
     }()

@@ -15,40 +15,20 @@ actor AudioEngineActor {
         self.delegate = AudioEngineDelegate(logger: logger)
     }
 
-    func loadPreset(presetId: String) async throws {
-        try await delegate.loadPreset(presetId: presetId)
+    func loadPreset(_ presetID: String) async throws {
+        try await delegate.loadPreset(presetID)
     }
 
-    func playSample(at path: String) async throws {
-        try await delegate.playSample(at: path)
+    func playPad(_ padID: AudioEngineClient.DrumPad.ID) async throws {
+        try await delegate.playPad(padID)
     }
 
-    func playPad(padId: Int) async throws {
-        try await delegate.playPad(padId: padId)
-    }
-
-    func stopAll() async {
-        await delegate.stopAll()
-    }
-
-    func loadedSamples() async -> [Int: AudioEngineClient.Sample] {
-        return await delegate.loadedSamples()
-    }
-
-    func drumPads() async -> [Int: AudioEngineClient.DrumPad] {
+    func drumPads() async -> [AudioEngineClient.DrumPad] {
         return await delegate.drumPads()
     }
 
-    func isPresetLoaded() async -> Bool {
-        return await delegate.isPresetLoaded()
-    }
-
-    func currentPresetId() async -> String? {
-        return await delegate.currentPresetId()
-    }
-
-    func sampleDuration(at path: String) async throws -> Double {
-        return try await delegate.sampleDuration(at: path)
+    func currentPresetID() async -> String? {
+        return await delegate.currentPresetID()
     }
 
     func isRecording() async -> Bool {
@@ -65,13 +45,5 @@ actor AudioEngineActor {
 
     func playRecordedAudio() async throws {
         try await delegate.playRecordedAudio()
-    }
-    
-    func currentPlayerTime(for path: String) async throws -> Double {
-        return try await delegate.currentPlayerTime(for: path)
-    }
-    
-    func isPlaying(for path: String) async -> Bool {
-        return await delegate.isPlaying(for: path)
     }
 }

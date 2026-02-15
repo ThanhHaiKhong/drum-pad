@@ -1,3 +1,10 @@
+//
+//  ComposeView.swift
+//  ComposeFeature
+//
+//  Created by Thanh Hai Khong on 13/2/26.
+//
+
 import SwiftUI
 import ComposableArchitecture
 import AudioEngineClient

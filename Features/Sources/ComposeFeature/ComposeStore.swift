@@ -1,3 +1,10 @@
+//
+//  ComposeStore.swift
+//  ComposeFeature
+//
+//  Created by Thanh Hai Khong on 13/2/26.
+//
+
 import ComposableArchitecture
 import AudioEngineClient
 import Foundation
@@ -108,16 +115,12 @@ public struct ComposeStore: Sendable {
         return .run { send in
             try await audioEngine.loadPreset("550")
 
-            let samples = await audioEngine.loadedSamples()
             let pads = await audioEngine.drumPads()
             let currentPresetId = await audioEngine.currentPresetId()
 
             var newState = AudioEngineClient.State()
-            newState.samples = samples
             newState.pads = pads
             newState.currentPreset = currentPresetId ?? ""
-            newState.loadedSamplesCount = samples.count
-            newState.totalSamplesCount = pads.count
 
             await send(.updateAudioEngineState(newState))
         } catch: { error, send in
@@ -129,26 +132,18 @@ public struct ComposeStore: Sendable {
     private func handleLoadPreset(state: inout State, presetId: String) -> Effect<Action> {
         return .run { send in
             var newState = AudioEngineClient.State()
-            newState.samples = [:]
-            newState.pads = [:]
+            newState.pads = []
             newState.currentPreset = presetId
-            newState.loadedSamplesCount = 0
-            newState.totalSamplesCount = 0
 
             await send(.updateAudioEngineState(newState))
 
             let result = await TaskResult {
                 try await audioEngine.loadPreset(presetId)
-
-                let samples = await audioEngine.loadedSamples()
                 let pads = await audioEngine.drumPads()
 
                 var updatedState = AudioEngineClient.State()
-                updatedState.samples = samples
                 updatedState.pads = pads
                 updatedState.currentPreset = presetId
-                updatedState.loadedSamplesCount = samples.count
-                updatedState.totalSamplesCount = pads.count
 
                 return updatedState
             }
@@ -169,19 +164,7 @@ public struct ComposeStore: Sendable {
     
     private func handleStopAll(state: inout State) -> Effect<Action> {
         let currentState = state.audioEngineState
-        return .run { send in
-            await audioEngine.stopAll()
-
-            var newState = AudioEngineClient.State()
-            newState.samples = currentState.samples
-            newState.pads = currentState.pads
-            newState.currentPreset = currentState.currentPreset
-            newState.loadedSamplesCount = currentState.loadedSamplesCount
-            newState.totalSamplesCount = currentState.totalSamplesCount
-            newState.isPlaying = false
-
-            await send(.updateAudioEngineState(newState))
-        }
+        return .none
     }
     
     private func handleStopAllResponse(state: inout State) -> Effect<Action> {
@@ -192,12 +175,9 @@ public struct ComposeStore: Sendable {
     private func handleUpdateAudioEngineState(state: inout State, newState: AudioEngineClient.State) -> Effect<Action> {
         state.audioEngineState = newState
         var drumPadStates: [DrumPadStore.State] = []
-        for sample in newState.samples {
-            for pad in newState.pads {
-                if pad.key == sample.key {
-                    drumPadStates.append(.init(sample: sample.value, pad: pad.value))
-                }
-            }
+        for pad in newState.pads {
+            // Since the pad now contains the sample, we just need to create the state with the pad
+            drumPadStates.append(.init(pad: pad))
         }
         state.drumPads = IdentifiedArray(uniqueElements: drumPadStates)
         return .none
