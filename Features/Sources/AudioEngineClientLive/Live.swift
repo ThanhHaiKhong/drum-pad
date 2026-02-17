@@ -32,8 +32,11 @@ extension AudioEngineClient: DependencyKey {
             playRecordedAudio: {
                 try await actor.playRecordedAudio()
             },
-            currentProgress: { padID in
-                return 0.0
+            currentPosition: { padID in
+                return try await actor.currentPosition(for: padID)
+            },
+            positionUpdates: { padID in
+                return await actor.positionUpdates(for: padID)
             }
         )
     }()

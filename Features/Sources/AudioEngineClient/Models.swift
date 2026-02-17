@@ -84,6 +84,8 @@ extension AudioEngineClient {
 }
 
 extension AudioEngineClient {
+    public typealias PositionUpdate = (padId: AudioEngineClient.DrumPad.ID, currentTime: TimeInterval, duration: TimeInterval)
+    
     public enum `Error`: Swift.Error, Sendable, LocalizedError {
         case loadPresetFailed(presetId: String, underlyingError: Swift.Error)
         case playSampleFailed(path: String, underlyingError: Swift.Error)

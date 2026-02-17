@@ -29,8 +29,6 @@ public struct DrumPadView: View {
                 .overlay(alignment: .top) {
                     VStack(alignment: .leading) {
                         CustomProgressView(progress: store.progress)
-                            .frame(height: 4)
-                            .opacity(store.isPlaying ? 1.0 : 0.0)
                         
                         Spacer()
                         

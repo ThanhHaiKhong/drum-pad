@@ -116,7 +116,7 @@ public struct ComposeStore: Sendable {
             try await audioEngine.loadPreset("550")
 
             let pads = await audioEngine.drumPads()
-            let currentPresetId = await audioEngine.currentPresetId()
+            let currentPresetId = await audioEngine.currentPresetID()
 
             var newState = AudioEngineClient.State()
             newState.pads = pads
@@ -163,7 +163,6 @@ public struct ComposeStore: Sendable {
     }
     
     private func handleStopAll(state: inout State) -> Effect<Action> {
-        let currentState = state.audioEngineState
         return .none
     }
     
@@ -176,7 +175,6 @@ public struct ComposeStore: Sendable {
         state.audioEngineState = newState
         var drumPadStates: [DrumPadStore.State] = []
         for pad in newState.pads {
-            // Since the pad now contains the sample, we just need to create the state with the pad
             drumPadStates.append(.init(pad: pad))
         }
         state.drumPads = IdentifiedArray(uniqueElements: drumPadStates)

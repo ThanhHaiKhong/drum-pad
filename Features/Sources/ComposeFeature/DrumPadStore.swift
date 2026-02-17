@@ -29,8 +29,8 @@ public struct DrumPadStore: Sendable {
         case binding(BindingAction<State>)
         case playPad
         case updateProgress
-        case progressTimerUpdated(Double)
         case setIsPlaying(Bool)
+        case positionUpdates(TaskResult<AudioEngineClient.PositionUpdate>)
     }
 
     @Dependency(\.audioEngine) private var audioEngine
@@ -40,22 +40,32 @@ public struct DrumPadStore: Sendable {
             switch action {
             case .binding:
                 return .none
+                
             case .playPad:
                 return handlePlayPad(state: &state)
+
             case .updateProgress:
                 return .run { [pad = state.pad] send in
-                    // Start a timer to periodically update the progress
-                    while !Task.isCancelled {
-                        try await Task.sleep(for: .milliseconds(100)) // Update every 100ms
-                        let progress = try? await audioEngine.currentProgress(pad.id)
-                        await send(.progressTimerUpdated(progress!))
+                    for await positionUpdate in await audioEngine.positionUpdates(pad.id) {
+                        await send(.positionUpdates(TaskResult { positionUpdate }))
                     }
                 }
-            case .progressTimerUpdated(let progress):
-                state.progress = progress
-                return .none
+                
             case .setIsPlaying(let isPlaying):
                 state.isPlaying = isPlaying
+                return .none
+                
+            case .positionUpdates(.success(let positionUpdate)):
+                if positionUpdate.duration > 0 {
+                    state.progress = positionUpdate.currentTime / positionUpdate.duration
+                } else {
+                    state.progress = 0
+                }
+                state.isPlaying = positionUpdate.currentTime < positionUpdate.duration
+                return .none
+                
+            case .positionUpdates(.failure):
+                state.isPlaying = false
                 return .none
             }
         }
@@ -73,7 +83,7 @@ extension DrumPadStore {
             try await audioEngine.playPad(padId)
             await send(.updateProgress)
         } catch: { send, error in
-//            await send(.setIsPlaying(false))
+            print("Failed to play pad: \(error)")
         }
     }
 }

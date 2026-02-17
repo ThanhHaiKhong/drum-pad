@@ -102,6 +102,12 @@ let package = Package(
                 .product(name: "ComposableArchitecture", package: "swift-composable-architecture"),
             ]
         ),
+        .testTarget(
+            name: "AudioEngineClientLiveTests",
+            dependencies: [
+                "AudioEngineClientLive"
+            ]
+        ),
     ]
 )
 

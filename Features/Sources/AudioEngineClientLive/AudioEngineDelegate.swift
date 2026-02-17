@@ -1,7 +1,9 @@
 import AudioEngineClient
-import AudioKit
+@preconcurrency import AudioKit
 import Foundation
 import AVFoundation
+
+typealias NodeStatus = AudioKit.NodeStatus
 
 final class AudioEngineDelegate: @unchecked Sendable {
     private struct PadEvent {
@@ -16,6 +18,8 @@ final class AudioEngineDelegate: @unchecked Sendable {
     private var padPlayers: [AudioEngineClient.DrumPad.ID: AudioPlayer] = [:]
     private var pads: [AudioEngineClient.DrumPad] = []
     private var currentPresetID: String?
+
+    private let positionUpdateManager = PositionUpdateManager()
 
     private var recordingStartTime: Date?
     private var recordingFilePath: String?
@@ -42,6 +46,15 @@ final class AudioEngineDelegate: @unchecked Sendable {
         } catch {
             logger("Audio engine failed to start: \(error)")
         }
+    }
+    
+    deinit {
+        for (_, player) in padPlayers {
+            if player.status == .playing {
+                player.stop()
+            }
+        }
+        padPlayers.removeAll()
     }
 
     // MARK: - Public Methods
@@ -122,6 +135,124 @@ final class AudioEngineDelegate: @unchecked Sendable {
 
     func currentPresetID() async -> String? {
         return currentPresetID
+    }
+
+    func currentPosition(for padID: AudioEngineClient.DrumPad.ID) async throws -> Double {
+        guard let player = padPlayers[padID] else {
+            throw AudioEngineClient.Error.playerNotInitialized(path: "No player for pad \(padID)")
+        }
+        return player.currentTime
+    }
+
+    func positionUpdates(for padID: AudioEngineClient.DrumPad.ID) -> AsyncStream<AudioEngineClient.PositionUpdate> {
+        return AsyncStream { [weak self] continuation in
+            Task { [weak self] in
+                guard let `self` = self else { return }
+
+                await self.positionUpdateManager.addContinuation(for: padID, continuation: continuation)
+
+                continuation.onTermination = { [weak self] _ in
+                    Task { [weak self] in
+                        guard let `self` = self else { return }
+                        await self.positionUpdateManager.removeContinuation(for: padID)
+                    }
+                }
+
+                await self.emitPositionUpdates(for: padID, continuation: continuation)
+            }
+        }
+    }
+
+    private func emitPositionUpdates(
+        for padID: AudioEngineClient.DrumPad.ID,
+        continuation: AsyncStream<AudioEngineClient.PositionUpdate>.Continuation
+    ) async {
+        var lastEmittedTime: Double? = nil
+        let debounceThreshold: TimeInterval = 0.05  // Minimum time between updates
+        var hasCompleted = false
+
+        defer {
+            // Ensure cleanup happens on any exit path
+            logger("Position updates ended for pad \(padID)")
+        }
+
+        while !Task.isCancelled {
+            // Check if stream is still active
+            guard await positionUpdateManager.hasContinuation(for: padID) else {
+                break
+            }
+
+            // Access player directly (AudioPlayer is thread-safe)
+            guard let player = padPlayers[padID] else {
+                try? await Task.sleep(nanoseconds: UInt64(0.2 * 1_000_000_000))
+                continue
+            }
+
+            let duration = player.duration
+            let currentTime = player.currentTime
+            let isPlaying = player.status == NodeStatus.Playback.playing
+            let isCompleted = !isPlaying || currentTime >= duration
+
+            // Handle completion state
+            if isCompleted && !hasCompleted {
+                // Yield final position (100%)
+                let finalPosition = AudioEngineClient.PositionUpdate(
+                    padId: padID,
+                    currentTime: duration,
+                    duration: duration
+                )
+
+                logger("currentTime: \(duration), duration: \(duration) - Playback completed")
+                continuation.yield(finalPosition)
+                
+                // Yield reset position (0%) to reset UI
+                let resetPosition = AudioEngineClient.PositionUpdate(
+                    padId: padID,
+                    currentTime: 0,
+                    duration: duration
+                )
+
+                logger("currentTime: 0, duration: \(duration) - Position reset")
+                continuation.yield(resetPosition)
+                
+                hasCompleted = true
+                break  // Exit loop after completion
+            }
+
+            // Emit position updates during playback
+            if isPlaying && currentTime >= 0 && duration > 0 {
+                let shouldEmit: Bool
+                if let lastTime = lastEmittedTime {
+                    shouldEmit = abs(currentTime - lastTime) >= debounceThreshold
+                } else {
+                    shouldEmit = true  // Always emit first update
+                }
+
+                if shouldEmit {
+                    let positionUpdate = AudioEngineClient.PositionUpdate(
+                        padId: padID,
+                        currentTime: currentTime,
+                        duration: duration
+                    )
+
+                    logger("currentTime: \(currentTime), duration: \(duration)")
+                    continuation.yield(positionUpdate)
+                    lastEmittedTime = currentTime
+                }
+            }
+
+            // Adaptive sleep interval - poll faster near end of playback
+            let sleepInterval: TimeInterval
+            if isPlaying && currentTime >= duration * 0.95 {
+                sleepInterval = 0.01  // 10ms near end
+            } else if isPlaying {
+                sleepInterval = 0.02  // 20ms during normal playback
+            } else {
+                sleepInterval = 0.1   // 100ms when idle
+            }
+
+            try? await Task.sleep(nanoseconds: UInt64(sleepInterval * 1_000_000_000))
+        }
     }
 
     func sampleDuration(at path: String) async throws -> Double {
@@ -262,7 +393,10 @@ final class AudioEngineDelegate: @unchecked Sendable {
                 continue
             }
 
-            let sampleBuffer = AVAudioPCMBuffer(pcmFormat: audioFileToMix.processingFormat, frameCapacity: AVAudioFrameCount(audioFileToMix.length))!
+            let sampleBuffer = AVAudioPCMBuffer(
+                pcmFormat: audioFileToMix.processingFormat,
+                frameCapacity: AVAudioFrameCount(audioFileToMix.length)
+            )!
 
             try audioFileToMix.read(into: sampleBuffer)
 
@@ -270,7 +404,6 @@ final class AudioEngineDelegate: @unchecked Sendable {
         }
 
         let audioFile = try AVAudioFile(forWriting: outputURL, settings: audioFormat.settings)
-
         try audioFile.write(from: mixedBuffer)
 
         logger("Manual rendering completed with actual audio data")

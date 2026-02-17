@@ -46,4 +46,12 @@ actor AudioEngineActor {
     func playRecordedAudio() async throws {
         try await delegate.playRecordedAudio()
     }
+    
+    func currentPosition(for padID: AudioEngineClient.DrumPad.ID) async throws -> Double {
+        return try await delegate.currentPosition(for: padID)
+    }
+    
+    func positionUpdates(for padID: AudioEngineClient.DrumPad.ID) -> AsyncStream<AudioEngineClient.PositionUpdate> {
+        return delegate.positionUpdates(for: padID)
+    }
 }

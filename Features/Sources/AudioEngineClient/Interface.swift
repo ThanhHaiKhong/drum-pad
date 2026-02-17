@@ -16,5 +16,6 @@ public struct AudioEngineClient: Sendable {
     public var stopRecording: @Sendable () async throws -> String? = { nil }
     public var isRecording: @Sendable () async -> Bool = { false }
     public var playRecordedAudio: @Sendable () async throws -> Void = { }
-    public var currentProgress: @Sendable (_ padID: AudioEngineClient.DrumPad.ID) async throws -> Double = { _ in 0.0 }
+    public var currentPosition: @Sendable (_ padID: AudioEngineClient.DrumPad.ID) async throws -> Double = { _ in 0.0 }
+    public var positionUpdates: @Sendable (_ padID: AudioEngineClient.DrumPad.ID) async -> AsyncStream<AudioEngineClient.PositionUpdate> = { _ in AsyncStream { _ in } }
 }
