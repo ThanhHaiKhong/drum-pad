@@ -15,10 +15,10 @@ extension AudioEngineClient: DependencyKey {
                 try await actor.playPad(padID)
             },
             drumPads: {
-                return await actor.drumPads()
+                await actor.drumPads()
             },
             currentPresetID: {
-                return await actor.currentPresetID()
+                await actor.currentPresetID()
             },
             startRecording: {
                 try await actor.startRecording()
@@ -27,16 +27,13 @@ extension AudioEngineClient: DependencyKey {
                 try await actor.stopRecording()
             },
             isRecording: {
-                return await actor.isRecording()
+                await actor.isRecording()
             },
             playRecordedAudio: {
                 try await actor.playRecordedAudio()
             },
-            currentPosition: { padID in
-                return try await actor.currentPosition(for: padID)
-            },
             positionUpdates: { padID in
-                return await actor.positionUpdates(for: padID)
+                await actor.positionUpdates(for: padID)
             }
         )
     }()

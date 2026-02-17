@@ -137,13 +137,6 @@ final class AudioEngineDelegate: @unchecked Sendable {
         return currentPresetID
     }
 
-    func currentPosition(for padID: AudioEngineClient.DrumPad.ID) async throws -> Double {
-        guard let player = padPlayers[padID] else {
-            throw AudioEngineClient.Error.playerNotInitialized(path: "No player for pad \(padID)")
-        }
-        return player.currentTime
-    }
-
     func positionUpdates(for padID: AudioEngineClient.DrumPad.ID) -> AsyncStream<AudioEngineClient.PositionUpdate> {
         return AsyncStream { [weak self] continuation in
             Task { [weak self] in
@@ -168,16 +161,14 @@ final class AudioEngineDelegate: @unchecked Sendable {
         continuation: AsyncStream<AudioEngineClient.PositionUpdate>.Continuation
     ) async {
         var lastEmittedTime: Double? = nil
-        let debounceThreshold: TimeInterval = 0.05  // Minimum time between updates
+        let debounceThreshold: TimeInterval = 0.05
         var hasCompleted = false
 
         defer {
-            // Ensure cleanup happens on any exit path
             logger("Position updates ended for pad \(padID)")
         }
 
         while !Task.isCancelled {
-            // Check if stream is still active
             guard await positionUpdateManager.hasContinuation(for: padID) else {
                 break
             }
