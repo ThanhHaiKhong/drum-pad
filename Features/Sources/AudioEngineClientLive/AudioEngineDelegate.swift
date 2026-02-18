@@ -19,11 +19,11 @@ final class AudioEngineDelegate: @unchecked Sendable {
     private var pads: [AudioEngineClient.DrumPad] = []
     private var currentPresetID: String?
     
-    // MARK: - Preset Metadata
+    private let chokeGroupManager: ChokeGroupManager
+    private let positionUpdateManager = PositionUpdateManager()
+    
     private var currentPresetTempo: Int = 0
     private var currentPreset: AudioEngineClient.Preset?
-
-    private let positionUpdateManager = PositionUpdateManager()
 
     private var recordingStartTime: Date?
     private var recordingFilePath: String?
@@ -39,6 +39,7 @@ final class AudioEngineDelegate: @unchecked Sendable {
             #endif
         }
     ) {
+        self.chokeGroupManager = ChokeGroupManager()
         self.logger = logger
         self.engine = AudioEngine()
         let mixer = Mixer()
@@ -51,7 +52,7 @@ final class AudioEngineDelegate: @unchecked Sendable {
             logger("Audio engine failed to start: \(error)")
         }
     }
-    
+
     deinit {
         for (_, player) in padPlayers {
             if player.status == .playing {
@@ -69,6 +70,16 @@ final class AudioEngineDelegate: @unchecked Sendable {
         logger("Loading preset: \(presetId)")
 
         if let presetURL = findPresetFile(named: presetId) {
+            // Stop all current playback
+            for (_, player) in padPlayers {
+                if player.status == .playing {
+                    player.stop()
+                }
+            }
+            
+            // Clear choke group tracking
+            await chokeGroupManager.clearAll()
+            
             let newPads = try await loadPresetFromURL(presetURL, presetId: presetId)
             self.currentPresetID = presetId
             self.pads = newPads
@@ -82,17 +93,32 @@ final class AudioEngineDelegate: @unchecked Sendable {
     func playPad(
         _ padID: AudioEngineClient.DrumPad.ID
     ) async throws {
-        logger("Playing pad with ID: \(padID)")
+        logger("▶️ Playing pad with ID: \(padID)")
 
         guard let pad = pads.first(where: { $0.id == padID }) else {
             throw AudioEngineClient.Error.padNotFound(padId: padID)
         }
-        
+
         let sample = pad.sample
         let samplePath = sample.path
-        
+
         guard let sampleURL = URL(string: samplePath) else {
             throw AudioEngineClient.Error.sampleNotFound(path: samplePath)
+        }
+
+        // MARK: - Choke Group Logic
+        // Get pads to choke BEFORE we register this pad
+        let padsToChoke = await chokeGroupManager.getPadsToChoke(
+            inGroup: pad.chokeGroup,
+            excluding: padID
+        )
+        
+        // Stop other players in the same choke group
+        for otherPadID in padsToChoke {
+            if let otherPlayer = padPlayers[otherPadID], otherPlayer.status == .playing {
+                logger("🔇 Choking pad \(otherPadID) (choke group \(pad.chokeGroup))")
+                otherPlayer.stop()
+            }
         }
 
         var player = padPlayers[padID]
@@ -120,6 +146,9 @@ final class AudioEngineDelegate: @unchecked Sendable {
             player.stop()
         }
 
+        // MARK: - Register this pad in choke group
+        await chokeGroupManager.registerPlaying(padID: padID, chokeGroup: pad.chokeGroup)
+
         if isRecordingOnlyPadSounds, let sampleURL = URL(string: sample.path) {
             let event = PadEvent(
                 time: CACurrentMediaTime() - recordingStartTimeOffset,
@@ -129,8 +158,9 @@ final class AudioEngineDelegate: @unchecked Sendable {
             recordedEvents.append(event)
             logger("Added pad event to recording: \(padID)")
         }
-        
+
         player.start()
+        logger("▶️ Pad \(padID) started (choke group \(pad.chokeGroup))")
     }
 
     func drumPads() async -> [AudioEngineClient.DrumPad] {
@@ -197,9 +227,9 @@ final class AudioEngineDelegate: @unchecked Sendable {
                     duration: duration
                 )
 
-                logger("currentTime: \(duration), duration: \(duration) - Playback completed")
+                logger("🏁 currentTime: \(duration), duration: \(duration) - Playback completed")
                 continuation.yield(finalPosition)
-                
+
                 // Yield reset position (0%) to reset UI
                 let resetPosition = AudioEngineClient.PositionUpdate(
                     padId: padID,
@@ -207,8 +237,14 @@ final class AudioEngineDelegate: @unchecked Sendable {
                     duration: duration
                 )
 
-                logger("currentTime: 0, duration: \(duration) - Position reset")
+                logger("🔄 currentTime: 0, duration: \(duration) - Position reset")
                 continuation.yield(resetPosition)
+
+                // MARK: - Unregister from choke group when playback completes
+                if let pad = pads.first(where: { $0.id == padID }) {
+                    await chokeGroupManager.unregister(padID: padID, chokeGroup: pad.chokeGroup)
+                    logger("🏁 Pad \(padID) unregistered from choke group \(pad.chokeGroup)")
+                }
                 
                 hasCompleted = true
                 break  // Exit loop after completion
