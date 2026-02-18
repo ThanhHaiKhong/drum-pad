@@ -25,6 +25,8 @@ public struct ComposeView: View {
 
     public var body: some View {
         VStack(spacing: 20) {
+            practiceSection
+            
             LazyVGrid(columns: columns, spacing: 10) {
                 ForEach(store.scope(state: \.drumPads, action: \.drumPads)) { store in
                     DrumPadView(store: store)
@@ -40,6 +42,19 @@ public struct ComposeView: View {
 }
 
 extension ComposeView {
+    public var practiceSection: some View {
+        HStack {
+            Button {
+                
+            } label: {
+                Text("Practice")
+                    .font(.headline)
+                    .fontDesign(.monospaced)
+            }
+            .buttonStyle(.borderedProminent)
+        }
+    }
+    
     public var headerView: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack {

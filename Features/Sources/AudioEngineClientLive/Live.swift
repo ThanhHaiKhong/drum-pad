@@ -34,6 +34,12 @@ extension AudioEngineClient: DependencyKey {
             },
             positionUpdates: { padID in
                 await actor.positionUpdates(for: padID)
+            },
+            currentTempo: {
+                await actor.currentTempo()
+            },
+            preset: {
+                await actor.preset()
             }
         )
     }()

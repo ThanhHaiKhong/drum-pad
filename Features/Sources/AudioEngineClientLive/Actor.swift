@@ -50,4 +50,14 @@ actor AudioEngineActor {
     func positionUpdates(for padID: AudioEngineClient.DrumPad.ID) -> AsyncStream<AudioEngineClient.PositionUpdate> {
         return delegate.positionUpdates(for: padID)
     }
+    
+    // MARK: - Preset Metadata
+    
+    func currentTempo() async -> Int {
+        return await delegate.currentTempo()
+    }
+    
+    func preset() async -> AudioEngineClient.Preset? {
+        return await delegate.preset()
+    }
 }

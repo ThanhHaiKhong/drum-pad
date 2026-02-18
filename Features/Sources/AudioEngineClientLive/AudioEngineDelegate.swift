@@ -18,6 +18,10 @@ final class AudioEngineDelegate: @unchecked Sendable {
     private var padPlayers: [AudioEngineClient.DrumPad.ID: AudioPlayer] = [:]
     private var pads: [AudioEngineClient.DrumPad] = []
     private var currentPresetID: String?
+    
+    // MARK: - Preset Metadata
+    private var currentPresetTempo: Int = 0
+    private var currentPreset: AudioEngineClient.Preset?
 
     private let positionUpdateManager = PositionUpdateManager()
 
@@ -613,76 +617,54 @@ final class AudioEngineDelegate: @unchecked Sendable {
             let jsonData = try Data(contentsOf: presetURL)
             let decoder = JSONDecoder()
 
-            struct RawPresetData: Codable {
-                let id: String
-                let name: String
-                let files: [String: RawPresetFile]
-            }
-
-            struct RawPresetFile: Codable {
-                let filename: String
-                let color: String
-                let choke: Int?
-            }
-
-            let rawPresetData = try decoder.decode(RawPresetData.self, from: jsonData)
-
-            var presetFiles: [String: AudioEngineClient.PresetData.PresetFile] = [:]
-            for (key, rawFile) in rawPresetData.files {
-                presetFiles[key] = AudioEngineClient.PresetData.PresetFile(
-                    id: key,
-                    filename: rawFile.filename,
-                    color: rawFile.color,
-                    choke: rawFile.choke
-                )
-            }
-
-            let presetData = AudioEngineClient.PresetData(
-                id: rawPresetData.id,
-                name: rawPresetData.name,
-                files: presetFiles
-            )
-
-            var newPads: [Int: AudioEngineClient.DrumPad] = [:]
-
-            for (key, file) in presetData.files {
-                if let intKey = Int(key) {
-                    let sampleURL = findSampleFile(named: file.filename)
-
-                    var finalSampleURL: URL?
-                    if let sampleURL = sampleURL {
-                        finalSampleURL = sampleURL
-                    } else {
-                        finalSampleURL = await copyResourceToDocumentsIfNeeded(resourceName: file.filename, ofType: nil)
-                    }
-
-                    guard let finalSampleURL = finalSampleURL else {
-                        logger("Sample file not found: \(file.filename), skipping...")
-                        continue
-                    }
-
-                    let sample = AudioEngineClient.DrumPad.Sample(
-                        id: intKey,
-                        filename: file.filename,
-                        name: file.filename.replacingOccurrences(of: ".wav", with: ""),
-                        path: finalSampleURL.absoluteString
-                    )
-
-                    newPads[intKey] = AudioEngineClient.DrumPad(
-                        id: intKey,
-                        sample: sample,
-                        color: file.color,
-                        chokeGroup: file.choke ?? 0
+            // Decode full Preset model
+            let preset = try decoder.decode(AudioEngineClient.Preset.self, from: jsonData)
+            
+            // Store preset metadata
+            self.currentPresetTempo = preset.tempo
+            self.currentPreset = preset
+            
+            logger("Loaded preset '\(preset.name)' at \(preset.tempo) BPM with \(preset.pads.count) pads")
+            
+            var newPads: [AudioEngineClient.DrumPad] = []
+            
+            for pad in preset.pads {
+                let sampleURL = findSampleFile(named: pad.sample.filename)
+                
+                var finalSampleURL: URL?
+                if let sampleURL = sampleURL {
+                    finalSampleURL = sampleURL
+                } else {
+                    finalSampleURL = await copyResourceToDocumentsIfNeeded(
+                        resourceName: pad.sample.filename,
+                        ofType: nil
                     )
                 }
-            }
+                
+                guard let finalSampleURL = finalSampleURL else {
+                    logger("Sample file not found: \(pad.sample.filename), skipping...")
+                    continue
+                }
 
+                // Create new pad with actual file path
+                let newPad = AudioEngineClient.DrumPad(
+                    id: pad.id,
+                    sample: AudioEngineClient.DrumPad.Sample(
+                        id: pad.sample.id,
+                        filename: pad.sample.filename,
+                        name: pad.sample.name,
+                        path: finalSampleURL.absoluteString
+                    ),
+                    color: pad.color,
+                    chokeGroup: pad.chokeGroup
+                )
+                newPads.append(newPad)
+            }
+            
             logger("Successfully processed preset: \(presetId) with \(newPads.count) pads")
             
-            // Convert dictionary to array and sort by ID to maintain consistent order
-            let padsArray = Array(newPads.values).sorted { $0.id < $1.id }
-
-            return padsArray
+            return newPads.sorted { $0.id < $1.id }
+            
         } catch let decodingError as DecodingError {
             logger("Failed to decode preset \(presetId): \(decodingError)")
             throw AudioEngineClient.Error.loadPresetFailed(presetId: presetId, underlyingError: decodingError)
@@ -769,6 +751,16 @@ final class AudioEngineDelegate: @unchecked Sendable {
         logger("Created default preset with \(samples.count) samples, \(samples.values.filter { !$0.path.isEmpty }.count) with actual file paths")
 
         return (samples: samples, pads: pads)
+    }
+    
+    // MARK: - Preset Metadata Accessors
+
+    func currentTempo() async -> Int {
+        return currentPresetTempo
+    }
+
+    func preset() async -> AudioEngineClient.Preset? {
+        return currentPreset
     }
 }
 
