@@ -34,6 +34,7 @@ extension AudioEngineClient: TestDependencyKey {
                 beatSchool: BeatSchool(v0: [], v1: [])
             )
         }
+
         return client
     }
 

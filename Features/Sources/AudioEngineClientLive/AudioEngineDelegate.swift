@@ -19,6 +19,7 @@ final class AudioEngineDelegate: @unchecked Sendable {
     private var pads: [AudioEngineClient.DrumPad] = []
     private var currentPresetID: String?
     
+    // MARK: - Choke Group Management
     private let chokeGroupManager: ChokeGroupManager
     private let positionUpdateManager = PositionUpdateManager()
     
@@ -39,11 +40,11 @@ final class AudioEngineDelegate: @unchecked Sendable {
             #endif
         }
     ) {
-        self.chokeGroupManager = ChokeGroupManager()
         self.logger = logger
         self.engine = AudioEngine()
         let mixer = Mixer()
         engine.output = mixer
+        self.chokeGroupManager = ChokeGroupManager()
 
         do {
             try engine.start()
@@ -788,7 +789,7 @@ final class AudioEngineDelegate: @unchecked Sendable {
 
         return (samples: samples, pads: pads)
     }
-    
+
     // MARK: - Preset Metadata Accessors
 
     func currentTempo() async -> Int {

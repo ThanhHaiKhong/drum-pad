@@ -12,6 +12,8 @@ let package = Package(
         .singleTargetLibrary("UIComponents"),
         .singleTargetLibrary("AudioEngineClient"),
         .singleTargetLibrary("AudioEngineClientLive"),
+        .singleTargetLibrary("SequenceEngineClient"),
+        .singleTargetLibrary("SequenceEngineClientLive"),
         .singleTargetLibrary("ComposeFeature"),
         .singleTargetLibrary("DiscoverFeature"),
         .singleTargetLibrary("LibraryFeature"),
@@ -39,6 +41,8 @@ let package = Package(
                 "ComposeFeature",
                 "DiscoverFeature",
                 "LibraryFeature",
+                "SequenceEngineClient",
+                "SequenceEngineClientLive",
                 "SettingsFeature"
             ]
         ),
@@ -77,10 +81,29 @@ let package = Package(
             ]
         ),
         .target(
+            name: "SequenceEngineClient",
+            dependencies: [
+                .product(name: "ComposableArchitecture", package: "swift-composable-architecture"),
+                "AudioEngineClient"
+            ]
+        ),
+        .target(
+            name: "SequenceEngineClientLive",
+            dependencies: [
+                .product(name: "ComposableArchitecture", package: "swift-composable-architecture"),
+                "SequenceEngineClient",
+                "AudioEngineClient",
+                "AudioEngineClientLive",
+                "AudioKit"
+            ]
+        ),
+        .target(
             name: "ComposeFeature",
             dependencies: [
                 .product(name: "ComposableArchitecture", package: "swift-composable-architecture"),
                 "AudioEngineClient",
+                "SequenceEngineClient",
+                "SequenceEngineClientLive",
                 "UIComponents"
             ]
         ),

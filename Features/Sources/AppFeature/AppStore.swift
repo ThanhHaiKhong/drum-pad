@@ -8,7 +8,7 @@ import SettingsFeature
 @Reducer
 public struct AppStore: Sendable {
     @ObservableState
-    public struct State: Sendable, Equatable {
+    public struct State: Sendable {
         var compose = ComposeStore.State()
         var discover = DiscoverStore.State()
         var library = LibraryStore.State()

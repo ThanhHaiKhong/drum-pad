@@ -52,11 +52,11 @@ actor AudioEngineActor {
     }
     
     // MARK: - Preset Metadata
-    
+
     func currentTempo() async -> Int {
         return await delegate.currentTempo()
     }
-    
+
     func preset() async -> AudioEngineClient.Preset? {
         return await delegate.preset()
     }

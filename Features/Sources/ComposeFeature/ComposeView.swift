@@ -24,15 +24,44 @@ public struct ComposeView: View {
     }
 
     public var body: some View {
-        VStack(spacing: 20) {
-            practiceSection
-            
-            LazyVGrid(columns: columns, spacing: 10) {
-                ForEach(store.scope(state: \.drumPads, action: \.drumPads)) { store in
-                    DrumPadView(store: store)
+        ScrollView {
+            VStack(spacing: 16) {
+                // Pattern selection section
+                patternSelectionSection
+                
+                // Pattern playback controls (show when pattern is selected)
+                if store.selectedPattern != nil {
+                    PatternPlaybackControls(
+                        patternName: store.currentPatternName,
+                        tempo: store.currentPatternTempo,
+                        currentStep: store.currentPatternStep,
+                        totalSteps: store.currentPatternTotalSteps,
+                        isPlaying: store.isPatternPlaying,
+                        onPlay: {
+                            if let pattern = store.selectedPattern {
+                                store.send(.playPattern(pattern))
+                            }
+                        },
+                        onStop: {
+                            store.send(.stopPattern)
+                        }
+                    )
+                }
+                
+                // Drum pads grid
+                LazyVGrid(columns: columns, spacing: 10) {
+                    ForEach(store.scope(state: \.drumPads, action: \.drumPads)) { store in
+                        DrumPadView(store: store)
+                    }
+                }
+                .padding(.horizontal)
+                
+                // Recording controls - hide when pattern is playing
+                if !store.isPatternPlaying {
+                    recordSection
                 }
             }
-            .padding(.horizontal)
+            .padding(.vertical)
         }
         .fontDesign(.monospaced)
         .onAppear {
@@ -42,10 +71,70 @@ public struct ComposeView: View {
 }
 
 extension ComposeView {
+    /// Pattern selection section with available BeatSchool patterns
+    public var patternSelectionSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Image(systemName: "music.note.list")
+                    .font(.title3)
+                    .foregroundColor(.blue)
+                
+                Text("BeatSchool Patterns")
+                    .font(.headline)
+                
+                Spacer()
+                
+                if !store.availablePatterns.isEmpty {
+                    Text("\(store.availablePatterns.count) patterns")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+            }
+            .padding(.horizontal)
+            
+            if store.availablePatterns.isEmpty {
+                HStack {
+                    Spacer()
+                    VStack(spacing: 8) {
+                        Image(systemName: "text.magnifyingglass")
+                            .font(.title)
+                            .foregroundColor(.secondary)
+                        Text("No patterns available")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                        Text("Make sure a preset with BeatSchool patterns is loaded")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                            .multilineTextAlignment(.center)
+                    }
+                    .padding(.vertical, 20)
+                    Spacer()
+                }
+                .padding(.horizontal)
+            } else {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 12) {
+                        ForEach(store.availablePatterns) { pattern in
+                            PatternButton(
+                                pattern: pattern,
+                                isSelected: store.selectedPattern?.id == pattern.id,
+                                tempo: store.currentPatternTempo,
+                                onSelect: {
+                                    store.send(.selectPattern(pattern))
+                                }
+                            )
+                        }
+                    }
+                    .padding(.horizontal)
+                }
+            }
+        }
+    }
+    
     public var practiceSection: some View {
         HStack {
             Button {
-                
+
             } label: {
                 Text("Practice")
                     .font(.headline)
@@ -149,6 +238,81 @@ extension ComposeView {
             .buttonStyle(.borderless)
         }
         .padding(.vertical)
+    }
+}
+
+// MARK: - Pattern Button Component
+
+/// A button component for selecting and displaying pattern info
+struct PatternButton: View {
+    let pattern: AudioEngineClient.Pattern
+    let isSelected: Bool
+    let tempo: Int
+    let onSelect: () -> Void
+    
+    var body: some View {
+        Button(action: onSelect) {
+            VStack(alignment: .leading, spacing: 8) {
+                // Header with name and checkmark
+                HStack {
+                    Text(pattern.name)
+                        .font(.subheadline)
+                        .fontWeight(isSelected ? .bold : .semibold)
+                        .lineLimit(1)
+                    
+                    Spacer()
+                    
+                    if isSelected {
+                        Image(systemName: "checkmark.circle.fill")
+                            .foregroundColor(.blue)
+                            .font(.caption)
+                    }
+                }
+                
+                // Pattern info
+                HStack(spacing: 6) {
+                    Label("\(pattern.sequencerSize)", systemImage: "list.bullet")
+                        .font(.caption2)
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 3)
+                        .background(Color.blue.opacity(0.2))
+                        .cornerRadius(4)
+                    
+                    Label("\(tempo)", systemImage: "metronome")
+                        .font(.caption2)
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 3)
+                        .background(Color.orange.opacity(0.2))
+                        .cornerRadius(4)
+                    
+                    Spacer()
+                }
+                
+                // Steps indicator
+                HStack(spacing: 2) {
+                    ForEach(0..<min(pattern.sequencerSize, 16), id: \.self) { index in
+                        Rectangle()
+                            .fill(index < pattern.sequencerSize ? Color.secondary.opacity(0.3) : Color.clear)
+                            .frame(width: 3, height: 3)
+                            .cornerRadius(1)
+                    }
+                }
+            }
+            .padding(12)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(isSelected ? Color.blue.opacity(0.15) : Color.gray.opacity(0.12))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 12)
+                    .stroke(isSelected ? Color.blue : Color.clear, lineWidth: 2)
+            )
+        }
+        .buttonStyle(.plain)
+        .frame(width: 170, height: 90)
+        .scaleEffect(isSelected ? 1.05 : 1.0)
+        .animation(.spring(response: 0.3), value: isSelected)
     }
 }
 

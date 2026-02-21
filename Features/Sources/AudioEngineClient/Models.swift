@@ -182,7 +182,8 @@ extension AudioEngineClient {
         public var padSequences: [PadSequence] {
             pads.compactMap { key, notes in
                 guard key != "undefined", let padId = Int(key) else { return nil }
-                return PadSequence(padId: padId, notes: notes)
+                // Pattern uses 0-based indexing, convert to 1-based pad IDs
+                return PadSequence(padId: padId + 1, notes: notes)
             }.sorted { $0.padId < $1.padId }
         }
         
@@ -307,20 +308,6 @@ extension AudioEngineClient.DrumPad {
             self.name = name
             self.path = path
         }
-    }
-}
-
-// MARK: - State
-
-extension AudioEngineClient {
-    public struct State: Codable, Equatable, Sendable {
-        public var currentPreset: String = ""
-        public var currentPresetName: String = ""
-        public var currentPresetTempo: Int = 0
-        public var pads: [DrumPad] = []
-        public var isPlaying: Bool = false
-
-        public init() {}
     }
 }
 

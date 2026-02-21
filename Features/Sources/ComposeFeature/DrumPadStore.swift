@@ -17,6 +17,11 @@ public struct DrumPadStore: Sendable {
         public let pad: AudioEngineClient.DrumPad
         public var isPlaying: Bool = false
         public var progress: Double = 0
+        
+        // MARK: - Pattern Playback Support
+        public var shouldHighlightForPattern: Bool = false
+        public var patternHighlightScale: CGFloat = 1.0
+        public var playsInCurrentPattern: Bool = false
 
         public init(
             pad: AudioEngineClient.DrumPad
@@ -31,6 +36,11 @@ public struct DrumPadStore: Sendable {
         case updateProgress
         case setIsPlaying(Bool)
         case positionUpdates(TaskResult<AudioEngineClient.PositionUpdate>)
+        
+        // MARK: - Pattern Playback
+        case updatePatternStep(Int, AudioEngineClient.Pattern)
+        case clearPatternHighlight
+        case animateHighlight
     }
 
     @Dependency(\.audioEngine) private var audioEngine
@@ -66,6 +76,31 @@ public struct DrumPadStore: Sendable {
                 
             case .positionUpdates(.failure):
                 state.isPlaying = false
+                return .none
+            
+            // MARK: - Pattern Playback
+            case .updatePatternStep(let currentStep, let pattern):
+                // Check if this pad plays at the current step
+                let playsAtStep = pattern.notes(forPadId: state.pad.id)
+                    .contains { $0.start == currentStep }
+                
+                state.shouldHighlightForPattern = playsAtStep
+                state.playsInCurrentPattern = !pattern.notes(forPadId: state.pad.id).isEmpty
+                
+                // Trigger animation if should highlight
+                if playsAtStep {
+                    return .send(.animateHighlight)
+                }
+                return .none
+                
+            case .clearPatternHighlight:
+                state.shouldHighlightForPattern = false
+                state.patternHighlightScale = 1.0
+                return .none
+                
+            case .animateHighlight:
+                // Pulsing animation
+                state.patternHighlightScale = 1.3
                 return .none
             }
         }
